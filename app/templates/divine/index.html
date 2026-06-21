@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}选择占卜方法 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <h1 class="hero-title" style="text-align:center;">选择占卜方法</h1>
+  <p class="section-subtitle">易经占卜有多种方法，请选择一种方式进行起卦</p>
+
+  <div class="card-grid">
+    {% for method in methods %}
+    <div class="card card-elevated {% if method.status == 'coming_soon' %}card-disabled{% endif %}">
+      <div class="method-icon">{{ method.icon }}</div>
+      <h3 class="card-title">{{ method.name }}</h3>
+      <p class="card-desc">{{ method.desc }}</p>
+      {% if method.status == 'ready' %}
+      <a href="{{ method.url }}" class="btn btn-primary btn-block">开始占卜</a>
+      {% else %}
+      <span class="status-badge coming-soon">即将开放</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 占卜须知 -->
+  <section class="page-section mt-lg">
+    <div class="card" style="background: var(--color-bg-section);">
+      <h2 style="color: var(--color-primary);">占卜须知</h2>
+      <ul style="line-height: 2; padding-left: 1.5rem;">
+        <li><strong>诚心诚意：</strong>占卜时保持心神宁静，专注所问之事。</li>
+        <li><strong>一事一问：</strong>每次占卜只问一件事情，避免混淆。</li>
+        <li><strong>不疑不占：</strong>心无惑则不占，占卜是解惑的工具而非娱乐。</li>
+        <li><strong>平常心：</strong>无论得到吉凶，都保持平常心，易经的智慧在于认识规律、把握时机。</li>
+        <li><strong>不可反复：</strong>同一件事短时间内不重复占卜，以免扰乱心神。</li>
+      </ul>
+    </div>
+  </section>
+</section>
+{% endblock %}

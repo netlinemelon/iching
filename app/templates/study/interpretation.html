@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}解读指南 - 学习易经{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <a href="/study/" class="back-link">&larr; 返回学习中心</a>
+  <h1>解读指南</h1>
+  <p class="section-subtitle">了解朱熹变爻解读规则，掌握卦象分析的基本方法。</p>
+
+  <!-- 朱熹变爻规则 -->
+  <section class="page-section">
+    <h2>朱熹变爻解读规则</h2>
+    <p>宋代大儒朱熹在《易学启蒙》中总结了七条变爻解读规则，是后世解读卦象的主要依据：</p>
+
+    <div style="display:flex; flex-direction:column; gap: var(--space-md); margin-top: var(--space-md);">
+      {% for rule in rules %}
+      <div class="card" style="border-left: 3px solid var(--color-primary); overflow:hidden;">
+        <div style="display:flex; align-items:center; gap: var(--space-md); padding: var(--space-sm) 0; flex-wrap:wrap;">
+          <span class="badge badge-primary" style="font-size: 1rem; padding: 4px 14px;">{{ rule.changing }}爻变</span>
+          <strong style="font-size: 1.1rem;">{{ rule.title }}</strong>
+          <span style="color: var(--color-text-secondary); font-size: var(--font-small);">—— {{ rule.rule }}</span>
+        </div>
+        <div style="margin-top: var(--space-sm);">
+          <p>{{ rule.description }}</p>
+          <p class="text-muted" style="font-size: var(--font-small); font-style:italic;">{{ rule.detail }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- 体用生克 -->
+  <section class="page-section">
+    <h2>体用生克关系</h2>
+    <p>体用分析是梅花易数的重要解读方法。体卦代表问卦者自身，用卦代表所问之事或外部环境。通过五行生克关系判断吉凶：</p>
+
+    <div class="body-use-table" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-md); margin: var(--space-md) 0;">
+      {% for rel in body_use_relations %}
+      <div class="body-use-card {{ rel.level }}" style="padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
+        {% if rel.level == '大吉' %}background: rgba(46,125,50,0.1);{% elif rel.level == '吉' %}background: rgba(21,101,192,0.1);{% elif rel.level == '次吉' %}background: rgba(46,125,50,0.05);{% elif rel.level == '小凶' %}background: rgba(245,127,23,0.1);{% elif rel.level == '凶' %}background: rgba(198,40,40,0.1);{% endif %}">
+        <div class="relation-name" style="font-size: 1.2rem; font-weight:bold;">{{ rel.relation }}</div>
+        <div style="margin: var(--space-xs) 0;">
+          <span class="badge {% if rel.level in ('大吉','吉','次吉') %}badge-success{% else %}badge-danger{% endif %}">{{ rel.level }}</span>
+        </div>
+        <p class="relation-meaning" style="font-size: var(--font-small);">{{ rel.meaning }}</p>
+        <p class="relation-desc" style="font-size: var(--font-small); color: var(--color-text-secondary);">{{ rel.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h3>五行生克</h3>
+    <div style="display:grid; gap: var(--space-md); margin: var(--space-md) 0;">
+      <div class="card" style="background: rgba(46,125,50,0.08); border-left: 4px solid var(--color-success);">
+        <h4 style="color: var(--color-success);">相生（生我者为父母）</h4>
+        <p style="font-size: 1.1rem; font-weight:bold; margin: var(--space-sm) 0;">木 → 火 → 土 → 金 → 水 → 木</p>
+        <p class="text-muted">木生火、火生土、土生金、金生水、水生木</p>
+      </div>
+      <div class="card" style="background: rgba(198,40,40,0.08); border-left: 4px solid var(--color-danger);">
+        <h4 style="color: var(--color-danger);">相克（克我者为官鬼）</h4>
+        <p style="font-size: 1.1rem; font-weight:bold; margin: var(--space-sm) 0;">木 → 土 → 水 → 火 → 金 → 木</p>
+        <p class="text-muted">木克土、土克水、水克火、火克金、金克木</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 解读要点 -->
+  <section class="page-section">
+    <h2>解读要点</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-md);">
+      <div class="card card-elevated">
+        <h4>1. 整体为先</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">先看卦象的整体含义，再分析具体爻辞。卦辞统领全卦，是理解卦象的基础。</p>
+      </div>
+      <div class="card card-elevated">
+        <h4>2. 变爻为重</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">变爻是事情变化的关键，重点分析变爻的爻辞。变爻位置也代表事情的关键所在。</p>
+      </div>
+      <div class="card card-elevated">
+        <h4>3. 本变结合</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">本卦代表现状，变卦代表发展趋势。两者结合分析才能全面把握事情的全貌。</p>
+      </div>
+      <div class="card card-elevated">
+        <h4>4. 体用兼顾</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">五行生克关系反映事情对你的影响程度。体卦为己，用卦为事，生克关系揭示吉凶。</p>
+      </div>
+      <div class="card card-elevated">
+        <h4>5. 灵活运用</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">不要拘泥于字面意思，结合实际情况灵活理解。易经的智慧在于启发思考。</p>
+      </div>
+      <div class="card card-elevated">
+        <h4>6. 保持客观</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">易经提供的是启示和思考方向，而非绝对预言。以平常心对待占卜结果。</p>
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}

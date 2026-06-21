@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}数字卦占卜 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <a href="/divine/" class="back-link">&larr; 返回占卜方法</a>
+
+  <h1 style="text-align:center;">数字卦</h1>
+  <p class="section-subtitle">任意输入三个数字起卦 · 简单快捷</p>
+
+  <!-- 说明 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section);">
+    <h3 style="color: var(--color-primary);">起卦方法</h3>
+    <ul style="line-height: 2; padding-left: 1.5rem;">
+      <li><strong>上卦：</strong>第一个数字 ÷ 8 余数 → 先天八卦序数</li>
+      <li><strong>下卦：</strong>第二个数字 ÷ 8 余数 → 先天八卦序数</li>
+      <li><strong>动爻：</strong>第三个数字 ÷ 6 余数</li>
+    </ul>
+    <p class="text-muted" style="font-size: var(--font-small); margin-top: var(--space-sm);">
+      先天八卦数：1=乾, 2=兑, 3=离, 4=震, 5=巽, 6=坎, 7=艮, 8=坤
+    </p>
+  </div>
+
+  <!-- 所问之事 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section); max-width: 500px; margin: 0 auto;">
+    <label for="number-question" class="form-label">所问之事</label>
+    <input type="text" id="number-question" name="question" class="form-input"
+           placeholder="请输入您要占卜的问题..."
+           maxlength="200">
+    <p class="text-muted" style="margin-top:var(--space-xs); margin-bottom:0; font-size:var(--font-tiny);">
+      静心凝神，输入您想问的事情
+    </p>
+  </div>
+
+  <!-- 号码输入 -->
+  <div class="card mb-lg" style="max-width: 500px; margin: 0 auto;">
+    <form action="/divine/number/cast" method="post">
+      <div style="margin-bottom: var(--space-lg);">
+        <label for="n1" style="display:block; margin-bottom: var(--space-xs); font-weight:600;">
+          第一个数字 <span class="text-muted" style="font-weight:normal;">（上卦）</span>
+        </label>
+        <input type="number" id="n1" name="n1" min="1" max="999" value="{{ random_numbers[0] }}"
+               style="width:100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 1.1rem;" required>
+      </div>
+
+      <div style="margin-bottom: var(--space-lg);">
+        <label for="n2" style="display:block; margin-bottom: var(--space-xs); font-weight:600;">
+          第二个数字 <span class="text-muted" style="font-weight:normal;">（下卦）</span>
+        </label>
+        <input type="number" id="n2" name="n2" min="1" max="999" value="{{ random_numbers[1] }}"
+               style="width:100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 1.1rem;" required>
+      </div>
+
+      <div style="margin-bottom: var(--space-lg);">
+        <label for="n3" style="display:block; margin-bottom: var(--space-xs); font-weight:600;">
+          第三个数字 <span class="text-muted" style="font-weight:normal;">（动爻）</span>
+        </label>
+        <input type="number" id="n3" name="n3" min="1" max="999" value="{{ random_numbers[2] }}"
+               style="width:100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 1.1rem;" required>
+      </div>
+
+      <div class="text-center">
+        <p class="mb-md text-muted">您可以修改上面的数字，或直接使用随机生成的数字</p>
+        <button type="submit" class="btn btn-primary btn-lg">数字起卦</button>
+        <button type="button" class="btn btn-ghost" onclick="window.location.reload()" style="margin-left: var(--space-sm);">重新生成数字</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

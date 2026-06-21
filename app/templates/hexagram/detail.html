@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}第{{ hexagram.number }}卦 {{ hexagram.name.cn }} - 八卦 I Ching{% endblock %}
+
+{% block content %}
+{% from "components/hexagram_svg.html" import render_hexagram_svg %}
+
+<article class="page-enter">
+
+  <!-- 导航 -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-lg); flex-wrap:wrap; gap: var(--space-sm);">
+    <div>
+      {% if hexagram.number > 1 %}
+      <a href="/hexagram/{{ hexagram.number - 1 }}" class="btn btn-ghost btn-sm">&larr; 上一卦</a>
+      {% endif %}
+    </div>
+    <a href="/hexagram/" class="btn btn-ghost btn-sm">返回总览</a>
+    <div>
+      {% if hexagram.number < 64 %}
+      <a href="/hexagram/{{ hexagram.number + 1 }}" class="btn btn-ghost btn-sm">下一卦 &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 卦象头部 -->
+  <header class="hexagram-header page-section">
+    <div style="display:flex; align-items:center; justify-content:center; gap: var(--space-xl); flex-wrap:wrap;">
+      {{ render_hexagram_svg(hexagram, size=200) }}
+      <div style="text-align:left;">
+        <span class="hexagram-number-badge">第{{ hexagram.number }}卦</span>
+        <h1 style="font-size: 2.2rem; margin: var(--space-sm) 0;">
+          {{ hexagram.name.cn }}（{{ hexagram.name.pinyin }}）
+        </h1>
+        <p style="font-size: 1.1rem; color: var(--color-text-secondary);">{{ hexagram.name.en }}</p>
+        <p style="color: var(--color-text-muted); font-size: var(--font-small);">
+          上{{ hexagram.upper_name }}下{{ hexagram.lower_name }}
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- 上下卦信息 -->
+  <section class="page-section">
+    <h2>上下卦</h2>
+    <div class="trigram-pair" style="display:flex; gap: var(--space-xl); justify-content:center; flex-wrap:wrap;">
+      <div class="trigram-item" style="text-align:center;">
+        <span class="trigram-unicode" style="font-size: 3rem;">{{ upper_trigram.unicode }}</span>
+        <p><strong>上卦（外卦）：</strong>{{ hexagram.upper_name }}</p>
+        <p class="text-muted" style="font-size: var(--font-small);">{{ upper_trigram.nature }} · {{ upper_trigram.element }} · {{ upper_trigram.direction }}</p>
+      </div>
+      <div class="trigram-item" style="text-align:center;">
+        <span class="trigram-unicode" style="font-size: 3rem;">{{ lower_trigram.unicode }}</span>
+        <p><strong>下卦（内卦）：</strong>{{ hexagram.lower_name }}</p>
+        <p class="text-muted" style="font-size: var(--font-small);">{{ lower_trigram.nature }} · {{ lower_trigram.element }} · {{ lower_trigram.direction }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 卦辞 -->
+  <section class="page-section">
+    <h2>卦辞</h2>
+    <div class="judgment-block">
+      <p>{{ hexagram.judgment.cn }}</p>
+    </div>
+  </section>
+
+  <!-- 彖传 -->
+  {% if hexagram.tuan and hexagram.tuan.cn %}
+  <section class="page-section">
+    <h2>彖传</h2>
+    <div class="classic-text">
+      <p>{{ hexagram.tuan.cn }}</p>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 象传 -->
+  {% if hexagram.xiang and hexagram.xiang.cn %}
+  <section class="page-section">
+    <h2>象传</h2>
+    <div class="classic-text">
+      <p>{{ hexagram.xiang.cn }}</p>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- 六爻 -->
+  <section class="page-section">
+    <h2>爻辞</h2>
+    <div class="lines-vertical-list">
+      {% for line in hexagram.lines|reverse %}
+      <div class="line-card">
+        <span class="line-position-name" style="color: var(--color-primary);">{{ line.name }}</span>
+        <div class="line-symbol-render">
+          {% if '九' in line.name %}
+          <div class="line-bar-yang" style="width:60px; height:10px;"></div>
+          {% else %}
+          <div class="line-bar-yin" style="width:60px;">
+            <div class="line-bar-yin-left" style="width:22px; height:10px;"></div>
+            <div class="line-bar-yin-right" style="width:22px; height:10px;"></div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="line-content">
+          <p class="line-text-main"><strong>{{ line.text }}</strong></p>
+          <p class="line-text-xiang">{{ line.xiang }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- 用九/用六 -->
+  {% if hexagram.extra_lines %}
+  <section class="page-section">
+    <h2>特殊爻辞</h2>
+    {% for el in hexagram.extra_lines %}
+    <div class="line-card" style="border-left: 3px solid var(--color-accent); background: var(--color-accent-light);">
+      <span class="line-position-name" style="color: var(--color-accent-dark);">{{ el.name }}</span>
+      <div class="line-content">
+        <p class="line-text-main"><strong>{{ el.text }}</strong></p>
+        <p class="line-text-xiang">{{ el.xiang }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- 相关卦象 -->
+  <section class="page-section">
+    <h2>相关卦象</h2>
+    <div class="related-hexagrams">
+      {% if mutual_hexagram %}
+      <a href="/hexagram/{{ mutual_hexagram.number }}" class="related-hex-card card-hover">
+        <span class="related-hex-unicode">{{ mutual_hexagram.unicode }}</span>
+        <span class="related-hex-label">互卦</span>
+        <span class="related-hex-name">{{ mutual_hexagram.name.cn }}</span>
+        <span class="text-muted" style="font-size: var(--font-tiny);">第{{ mutual_hexagram.number }}卦</span>
+      </a>
+      {% endif %}
+      {% if opposite_hexagram %}
+      <a href="/hexagram/{{ opposite_hexagram.number }}" class="related-hex-card card-hover">
+        <span class="related-hex-unicode">{{ opposite_hexagram.unicode }}</span>
+        <span class="related-hex-label">错卦</span>
+        <span class="related-hex-name">{{ opposite_hexagram.name.cn }}</span>
+        <span class="text-muted" style="font-size: var(--font-tiny);">第{{ opposite_hexagram.number }}卦</span>
+      </a>
+      {% endif %}
+      {% if reverse_hexagram %}
+      <a href="/hexagram/{{ reverse_hexagram.number }}" class="related-hex-card card-hover">
+        <span class="related-hex-unicode">{{ reverse_hexagram.unicode }}</span>
+        <span class="related-hex-label">综卦</span>
+        <span class="related-hex-name">{{ reverse_hexagram.name.cn }}</span>
+        <span class="text-muted" style="font-size: var(--font-tiny);">第{{ reverse_hexagram.number }}卦</span>
+      </a>
+      {% endif %}
+    </div>
+  </section>
+
+</article>
+{% endblock %}

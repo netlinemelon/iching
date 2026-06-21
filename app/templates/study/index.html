@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}学习易经 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <h1 class="hero-title" style="text-align:center;">学习易经</h1>
+  <p class="section-subtitle">探索易经的深邃智慧，从基础开始了解八卦与六十四卦的奥秘。</p>
+
+  <!-- 学习入口卡片 -->
+  <div class="card-grid">
+    {% for section in sections %}
+    <a href="{{ section.link }}" class="card card-elevated card-hover" style="display:flex; flex-direction:column; text-decoration:none; color: inherit;">
+      <div style="font-size: 2.5rem; margin-bottom: var(--space-sm);">{{ section.icon }}</div>
+      <h3 class="card-title">{{ section.title }}</h3>
+      <p class="card-desc" style="flex:1;">{{ section.desc }}</p>
+      <div style="margin-top: var(--space-sm);">
+        <span class="badge badge-accent">共 {{ section.count }} 项</span>
+        <span style="float:right; color: var(--color-primary); font-weight:600;">查看 &rarr;</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- 易经概述 -->
+  <section class="page-section mt-xl">
+    <h2 class="section-title">易经概述</h2>
+
+    <div class="card mb-lg">
+      <p>《易经》是中国古代最重要的经典之一，被誉为"群经之首，大道之源"。它起源于伏羲画八卦，历经周文王推演六十四卦并作卦辞、周公作爻辞，最后孔子作十翼（彖传上下、象传上下、系辞上下、文言、说卦、序卦、杂卦），形成了今天我们所见的《易经》完整体系。</p>
+    </div>
+
+    <h3>八卦基础</h3>
+    <div class="trigram-quick-list" style="display:flex; gap: var(--space-sm); flex-wrap:wrap; margin: var(--space-md) 0;">
+      {% for t in trigrams %}
+      <div class="trigram-item" style="background: var(--color-bg-section); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); display:flex; align-items:center; gap: var(--space-sm);">
+        <span style="font-size: 1.5rem;">{{ t.unicode }}</span>
+        <span style="font-weight:bold;">{{ t.name_cn }}</span>
+        <span class="text-muted" style="font-size: var(--font-small);">{{ t.nature }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p>八卦分别象征天、泽、火、雷、风、水、山、地八种自然现象，是易经最基本的符号系统。</p>
+
+    <h3>六十四卦</h3>
+    <div class="card">
+      <p>六十四卦由两个八卦上下相叠而成（上卦×下卦 = 8×8 = 64卦）。</p>
+      <p>首卦为 <strong>{{ first_hexagram.name.cn }}（{{ first_hexagram.name.pinyin }}·{{ first_hexagram.unicode }}）</strong>，代表创造与刚健——"天行健，君子以自强不息"。</p>
+      <p>末卦为 <strong>{{ last_hexagram.name.cn }}（{{ last_hexagram.name.pinyin }}·{{ last_hexagram.unicode }}）</strong>，代表未完成与新的开始——"物不可穷也，故受之以未济终焉"。</p>
+      <p style="margin-top: var(--space-sm);">六十四卦的顺序并非随意排列，而是按照事物发展的内在逻辑编排，反映了古人对宇宙万物变化规律的深刻认识。</p>
+    </div>
+
+    <!-- 学习路径 -->
+    <h3 class="mt-lg">推荐学习路径</h3>
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="card card-elevated text-center" style="padding: var(--space-md);">
+        <div style="font-size: 2rem;">1</div>
+        <h4>八卦基础</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">了解八个基本卦象的含义和象征</p>
+      </div>
+      <div class="card card-elevated text-center" style="padding: var(--space-md);">
+        <div style="font-size: 2rem;">2</div>
+        <h4>六十四卦</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">浏览所有卦象，了解卦辞爻辞</p>
+      </div>
+      <div class="card card-elevated text-center" style="padding: var(--space-md);">
+        <div style="font-size: 2rem;">3</div>
+        <h4>起卦方法</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">学习各种起卦方式</p>
+      </div>
+      <div class="card card-elevated text-center" style="padding: var(--space-md);">
+        <div style="font-size: 2rem;">4</div>
+        <h4>解读指南</h4>
+        <p class="text-muted" style="font-size: var(--font-small);">掌握变爻规则、体用生克分析</p>
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}

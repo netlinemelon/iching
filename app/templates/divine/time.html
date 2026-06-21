@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}时间卦占卜 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <a href="/divine/" class="back-link">&larr; 返回占卜方法</a>
+
+  <h1 style="text-align:center;">时间卦</h1>
+  <p class="section-subtitle">以当前年月日时起卦 · 随时随地，无需工具</p>
+
+  <!-- 说明 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section);">
+    <h3 style="color: var(--color-primary);">起卦方法</h3>
+    <ul style="line-height: 2; padding-left: 1.5rem;">
+      <li><strong>上卦：</strong>(年 + 月 + 日) ÷ 8 余数 → 先天八卦序数</li>
+      <li><strong>下卦：</strong>(月 + 日 + 时辰) ÷ 8 余数 → 先天八卦序数</li>
+      <li><strong>动爻：</strong>(年 + 月 + 日 + 时辰) ÷ 6 余数</li>
+    </ul>
+  </div>
+
+  <!-- 当前时间信息 -->
+  <div class="card mb-lg">
+    <h3 style="color: var(--color-primary);">当前时间</h3>
+    <table class="data-table" style="width:100%; max-width: 400px; margin: var(--space-md) auto;">
+      <tbody>
+        <tr>
+          <td><strong>公历</strong></td>
+          <td>{{ time_info.datetime_str }}</td>
+        </tr>
+        <tr>
+          <td><strong>星期</strong></td>
+          <td>{{ time_info.weekday }}</td>
+        </tr>
+        <tr>
+          <td><strong>年</strong></td>
+          <td>{{ time_info.year }} 年</td>
+        </tr>
+        <tr>
+          <td><strong>月</strong></td>
+          <td>{{ time_info.month }} 月</td>
+        </tr>
+        <tr>
+          <td><strong>日</strong></td>
+          <td>{{ time_info.day }} 日</td>
+        </tr>
+        <tr>
+          <td><strong>时辰</strong></td>
+          <td>{{ time_info.hour_branch_name }} 时 (地支序数 {{ time_info.hour_branch }})</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-muted" style="font-size: var(--font-small); text-align:center;">{{ time_info.lunar_note }}</p>
+  </div>
+
+  <!-- 所问之事 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section); max-width: 500px; margin: 0 auto;">
+    <label for="time-question" class="form-label">所问之事</label>
+    <input type="text" id="time-question" name="question" class="form-input"
+           placeholder="请输入您要占卜的问题..."
+           maxlength="200">
+    <p class="text-muted" style="margin-top:var(--space-xs); margin-bottom:0; font-size:var(--font-tiny);">
+      静心凝神，输入您想问的事情
+    </p>
+  </div>
+
+  <!-- 操作 -->
+  <div class="text-center">
+    <form action="/divine/time/cast" method="post">
+      <p class="mb-md text-muted">以当前时间信息起卦，点击按钮开始</p>
+      <button type="submit" class="btn btn-primary btn-lg">时间起卦</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

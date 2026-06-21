@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}起卦方法 - 学习易经{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <a href="/study/" class="back-link">&larr; 返回学习中心</a>
+  <h1>起卦方法</h1>
+  <p class="section-subtitle">易经占卜有多种起卦方式，每种方法都有其独特的传统和适用场景。</p>
+
+  <div class="methods-detail-list" style="display:flex; flex-direction:column; gap: var(--space-xl);">
+    {% for method in methods %}
+    <section class="card card-elevated" style="padding: var(--space-lg);">
+      <div class="method-header" style="display:flex; align-items:center; gap: var(--space-md); flex-wrap:wrap;">
+        <span style="font-size: 2.5rem;">{{ method.icon }}</span>
+        <h2 style="margin:0; flex:1;">{{ method.name }}</h2>
+        {% if method.status == "ready" %}
+        <span class="status-badge ready">可用</span>
+        {% else %}
+        <span class="status-badge coming-soon">即将开放</span>
+        {% endif %}
+      </div>
+
+      <div class="method-history" style="margin-top: var(--space-md);">
+        <h3>历史渊源</h3>
+        <p>{{ method.history }}</p>
+      </div>
+
+      <div class="method-steps" style="margin-top: var(--space-md);">
+        <h3>操作步骤</h3>
+        <ol style="line-height: 2; padding-left: 1.5rem;">
+          {% for step in method.steps %}
+          <li>{{ step }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+
+      <div class="method-rule card" style="background: var(--color-bg-section); margin-top: var(--space-md);">
+        <h4>核心规则</h4>
+        <p>{{ method.rule }}</p>
+      </div>
+
+      {% if method.status == "ready" %}
+      <div style="margin-top: var(--space-md);">
+        <a href="/divine/coin" class="btn btn-primary">开始占卜</a>
+      </div>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

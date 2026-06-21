@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}六十四卦 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <h1 style="text-align:center;">六十四卦</h1>
+  <p class="section-subtitle">按卦序排列，共 {{ total }} 卦 · 点击卦象查看详情</p>
+
+  <!-- 搜索 -->
+  <form action="/hexagram/search" method="get" class="search-bar" style="max-width: 500px; margin: 0 auto var(--space-lg);">
+    <label for="search-input" class="sr-only">搜索卦名、卦辞、爻辞</label>
+    <input type="text" id="search-input" name="q" placeholder="搜索卦名、卦辞、爻辞..." class="search-input" minlength="1" required>
+    <button type="submit" class="btn btn-primary">搜索</button>
+  </form>
+
+  {% if message %}
+  <div class="message-info">{{ message }}</div>
+  {% endif %}
+
+  {% if grid_rows %}
+  <div class="hexagram-grid-container">
+    <div class="hexagram-grid">
+      {% for row in grid_rows %}
+        {% for hex in row %}
+        <a href="/hexagram/{{ hex.number }}" class="hexagram-cell" data-trigrams="{{ hex.upper_trigram_name }}{{ hex.lower_trigram_name }}">
+          <span class="hex-cell-unicode">{{ hex.unicode }}</span>
+          <span class="hex-cell-number">第{{ hex.number }}卦</span>
+          <span class="hex-cell-name">{{ hex.name_cn }}</span>
+          <span class="hex-cell-pinyin">{{ hex.name_pinyin }}</span>
+        </a>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,90 @@
+[
+  {
+    "binary": "111",
+    "name_cn": "乾",
+    "name_en": "Qian",
+    "nature": "天",
+    "element": "金",
+    "direction": "西北",
+    "family": "父",
+    "unicode": "☰",
+    "description": "乾为天，刚健中正，纯粹精也。"
+  },
+  {
+    "binary": "110",
+    "name_cn": "兑",
+    "name_en": "Dui",
+    "nature": "泽",
+    "element": "金",
+    "direction": "西",
+    "family": "少女",
+    "unicode": "☱",
+    "description": "兑为泽，说万物者莫说乎泽。"
+  },
+  {
+    "binary": "101",
+    "name_cn": "离",
+    "name_en": "Li",
+    "nature": "火",
+    "element": "火",
+    "direction": "南",
+    "family": "中女",
+    "unicode": "☲",
+    "description": "离为火，明两作，大人以继明照于四方。"
+  },
+  {
+    "binary": "100",
+    "name_cn": "震",
+    "name_en": "Zhen",
+    "nature": "雷",
+    "element": "木",
+    "direction": "东",
+    "family": "长男",
+    "unicode": "☳",
+    "description": "震为雷，震惊百里，不丧匕鬯。"
+  },
+  {
+    "binary": "011",
+    "name_cn": "巽",
+    "name_en": "Xun",
+    "nature": "风",
+    "element": "木",
+    "direction": "东南",
+    "family": "长女",
+    "unicode": "☴",
+    "description": "巽为风，随风巽，君子以申命行事。"
+  },
+  {
+    "binary": "010",
+    "name_cn": "坎",
+    "name_en": "Kan",
+    "nature": "水",
+    "element": "水",
+    "direction": "北",
+    "family": "中男",
+    "unicode": "☵",
+    "description": "坎为水，水流而不盈，行险而不失其信。"
+  },
+  {
+    "binary": "001",
+    "name_cn": "艮",
+    "name_en": "Gen",
+    "nature": "山",
+    "element": "土",
+    "direction": "东北",
+    "family": "少男",
+    "unicode": "☶",
+    "description": "艮为山，时止则止，时行则行，动静不失其时。"
+  },
+  {
+    "binary": "000",
+    "name_cn": "坤",
+    "name_en": "Kun",
+    "nature": "地",
+    "element": "土",
+    "direction": "西南",
+    "family": "母",
+    "unicode": "☷",
+    "description": "坤为地，坤厚载物，德合无疆。"
+  }
+]

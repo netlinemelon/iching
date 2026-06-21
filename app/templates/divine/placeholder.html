@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ method_name }} - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <a href="/divine/" class="back-link">&larr; 返回占卜方法</a>
+
+  <div class="empty-state" style="min-height: 40vh; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div class="empty-icon">🔮</div>
+    <h1>{{ method_name }}</h1>
+    <p>{{ description }}</p>
+    <div class="mt-md">
+      <span class="status-badge coming-soon" style="font-size: 1rem; padding: 6px 20px;">正在开发中，敬请期待</span>
+    </div>
+    <div class="card mt-lg" style="max-width: 400px;">
+      <p class="text-muted">与此同时，您可以使用以下方法进行占卜：</p>
+      <a href="/divine/coin" class="btn btn-primary btn-block mt-md">金钱卦占卜</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}八卦详解 - 学习易经{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <a href="/study/" class="back-link">&larr; 返回学习中心</a>
+  <h1>八卦详解</h1>
+  <p class="section-subtitle">八卦是易经的基础符号系统，由阴阳爻组合而成。每一卦都有其独特的象征意义和属性。</p>
+
+  <div class="trigram-detail-list" style="display:flex; flex-direction:column; gap: var(--space-lg);">
+    {% for t in trigrams %}
+    <section class="card card-elevated" style="padding: var(--space-lg);">
+      <div class="trigram-header" style="display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap;">
+        <span style="font-size: 4rem; line-height: 1;">{{ t.unicode }}</span>
+        <div>
+          <h2 style="margin:0; font-size: var(--font-h2);">{{ t.name_cn }}（{{ t.name_en }}）</h2>
+          <p class="text-muted">{{ t.description }}</p>
+        </div>
+      </div>
+
+      <div class="trigram-properties" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-md); margin: var(--space-md) 0;">
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">二进制</span>
+          <span class="value" style="font-weight:bold; font-family: var(--font-mono);">{{ t.binary }}</span>
+        </div>
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">卦象</span>
+          <span class="value" style="font-weight:bold;">{{ t.nature }}</span>
+        </div>
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">五行</span>
+          <span class="value" style="font-weight:bold;">{{ t.element }}</span>
+        </div>
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">方位</span>
+          <span class="value" style="font-weight:bold;">{{ t.direction }}</span>
+        </div>
+        {% if t.meaning %}
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">取义</span>
+          <span class="value" style="font-weight:bold;">{{ t.meaning }}</span>
+        </div>
+        {% endif %}
+        {% if t.family %}
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">人物</span>
+          <span class="value" style="font-weight:bold;">{{ t.family }}</span>
+        </div>
+        {% endif %}
+        {% if t.body %}
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">人体</span>
+          <span class="value" style="font-weight:bold;">{{ t.body }}</span>
+        </div>
+        {% endif %}
+        {% if t.animal %}
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">动物</span>
+          <span class="value" style="font-weight:bold;">{{ t.animal }}</span>
+        </div>
+        {% endif %}
+        {% if t.season %}
+        <div class="property">
+          <span class="label" style="font-size: var(--font-small); color: var(--color-text-muted); display:block;">季节</span>
+          <span class="value" style="font-weight:bold;">{{ t.season }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if t.full_description %}
+      <div class="card" style="background: var(--color-bg-section); margin-top: var(--space-md);">
+        <p>{{ t.full_description }}</p>
+        <p style="margin-top: var(--space-sm); font-weight:600; color: var(--color-primary);">特性：{{ t.traits }}</p>
+      </div>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}金钱卦占卜 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<div x-data="coinDivination()" class="page-enter">
+  <h1 class="text-center">金钱卦</h1>
+  <p class="section-subtitle">传统三枚铜钱起卦法 · 静心凝神，默念所问之事</p>
+
+  <!-- 所问之事 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section);">
+    <label for="question-input" class="form-label" style="font-size:1rem;">所问之事</label>
+    <input type="text" id="question-input" x-model="question" class="form-input"
+           placeholder="请输入您要占卜的问题，例如：今年的事业发展如何？"
+           maxlength="200"
+           style="font-size:1rem;">
+    <p class="text-muted" style="font-size:var(--font-tiny); margin-top:var(--space-xs); margin-bottom:0;">
+      静心凝神，输入您想问的事情
+    </p>
+  </div>
+
+  <!-- 起卦说明 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section);">
+    <h3 style="color: var(--color-primary);">起卦说明</h3>
+    <ol style="line-height: 2; padding-left: 1.5rem;">
+      <li>静心凝神，默念您想问的事情。</li>
+      <li>点击下方"掷铜钱"按钮，系统会自动抛掷三枚铜钱。</li>
+      <li>每次抛掷得到一爻，从下往上排列。</li>
+      <li>共抛掷<strong>6次</strong>，完成起卦后将自动查看结果。</li>
+    </ol>
+  </div>
+
+  <!-- 铜钱规则参考 -->
+  <details class="card mb-lg" style="padding: var(--space-md);">
+    <summary style="cursor:pointer; font-weight:600; color: var(--color-primary);">查看铜钱规则</summary>
+    <div class="grid grid-cols-2 gap-sm mt-md">
+      <div class="p-sm text-center" style="background: var(--color-bg-section); border-radius: var(--radius-sm);">
+        <span class="text-bold">三反 (6)</span><br>
+        <span style="color: var(--color-changing);">老阴 · 变爻</span>
+      </div>
+      <div class="p-sm text-center" style="background: var(--color-bg-section); border-radius: var(--radius-sm);">
+        <span class="text-bold">二反一正 (7)</span><br>
+        <span style="color: var(--color-yang);">少阳 · 不变</span>
+      </div>
+      <div class="p-sm text-center" style="background: var(--color-bg-section); border-radius: var(--radius-sm);">
+        <span class="text-bold">一反二正 (8)</span><br>
+        <span style="color: var(--color-yin);">少阴 · 不变</span>
+      </div>
+      <div class="p-sm text-center" style="background: var(--color-bg-section); border-radius: var(--radius-sm);">
+        <span class="text-bold">三正 (9)</span><br>
+        <span style="color: var(--color-changing);">老阳 · 变爻</span>
+      </div>
+    </div>
+  </details>
+
+  <!-- 抛掷区域 -->
+  <div class="mx-auto" style="max-width: 600px;">
+
+    <!-- 当前抛掷状态 -->
+    <div class="card text-center mb-lg flex flex-col items-center justify-center" style="min-height: 180px;">
+      <!-- 未开始 -->
+      <template x-if="step === 'ready' && !animating && completedCount === 0">
+        <div>
+          <div class="mb-md" style="font-size: 3rem;">🪙</div>
+          <p class="text-secondary">点击下方按钮开始抛掷铜钱</p>
+        </div>
+      </template>
+
+      <!-- 当前抛掷动画 -->
+      <template x-if="currentCoins && currentCoins.flipping">
+        <div>
+          <div class="coin-group flex gap-md justify-center mb-md">
+            <template x-for="(face, idx) in currentCoins.faces" :key="idx">
+              <div class="coin coin-flipping rounded-full flex items-center justify-center text-bold"
+                   style="width:60px; height:60px; font-size:1.2rem; background: var(--color-accent); color: var(--color-secondary); border: 3px solid var(--color-accent-dark);">
+                <span x-text="face"></span>
+              </div>
+            </template>
+          </div>
+          <p class="text-muted text-small">正在抛掷第 <span x-text="completedCount + 1"></span> 爻...</p>
+        </div>
+      </template>
+
+      <!-- 抛掷结果 -->
+      <template x-if="currentCoins && !currentCoins.flipping">
+        <div>
+          <div class="coin-group flex gap-md justify-center mb-sm">
+            <template x-for="(face, idx) in currentCoins.faces" :key="idx">
+              <div class="rounded-full flex items-center justify-center text-bold"
+                   style="width:60px; height:60px; font-size:1.2rem; background: var(--color-bg-card); color: var(--color-text); border: 3px solid var(--color-accent-dark); box-shadow: var(--shadow-sm);">
+                <span x-text="face"></span>
+              </div>
+            </template>
+          </div>
+          <div class="mt-sm">
+            <span class="text-bold">和值: <span x-text="currentCoins.sum"></span></span>
+            <span class="ml-md text-bold" style="color: var(--color-primary);">
+              <span x-text="currentCoins.result.type"></span>
+              <span x-show="currentCoins.result.changing" style="color: var(--color-changing);"> · 变爻</span>
+            </span>
+          </div>
+        </div>
+      </template>
+
+      <!-- 全部完成 -->
+      <template x-if="step === 'done'">
+        <div>
+          <div class="mb-sm" style="font-size: 3rem;">䷀</div>
+          <p class="text-bold" style="color: var(--color-success); font-size: 1.1rem;">占卜完成！正在解读卦象...</p>
+        </div>
+      </template>
+
+      <!-- 错误状态 -->
+      <template x-if="step === 'error'">
+        <div>
+          <div class="mb-sm" style="font-size: 3rem;">⚠️</div>
+          <p class="text-bold" style="color: var(--color-danger); font-size: 1rem;" x-text="errorMessage || '提交失败，请重试。'"></p>
+          <div class="mt-md">
+            <button class="btn btn-primary" @click="retrySubmit">重新提交</button>
+            <button class="btn btn-secondary ml-sm" @click="reset">重新开始</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- 累积卦象展示 -->
+    <div class="card mb-lg" x-show="lines.length > 0">
+      <h3 class="text-center mb-md">已成之爻</h3>
+      <div class="lines-stack mx-auto" style="max-width: 280px;">
+        <template x-for="(line, idx) in lines" :key="line.position">
+          <div class="line-row line-build" :style="{ animationDelay: (idx * 0.1) + 's' }">
+            <span class="line-position-label" x-text="line.name"></span>
+            <div class="line-bar-container">
+              <!-- 阳爻 -->
+              <template x-if="line.is_yang">
+                <div class="line-bar-yang" :class="{ 'changing-line-glow': line.changing }"></div>
+              </template>
+              <!-- 阴爻 -->
+              <template x-if="!line.is_yang">
+                <div class="line-bar-yin" :class="{ 'changing-line-glow': line.changing }">
+                  <div class="line-bar-yin-left"></div>
+                  <div class="line-bar-yin-right"></div>
+                </div>
+              </template>
+            </div>
+            <span class="line-changing-indicator" x-show="line.changing" style="font-size: var(--font-tiny);">变</span>
+            <span class="line-changing-indicator" x-show="!line.changing" style="visibility:hidden;">.</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center">
+      <template x-if="canToss">
+        <button class="btn btn-primary btn-lg" @click="startToss" :disabled="animating">
+          <span x-text="completedCount === 0 ? '掷铜钱 · 开始' : '掷铜钱 · 第 ' + (completedCount + 1) + ' 爻'"></span>
+        </button>
+      </template>
+      <template x-if="step === 'done'">
+        <div>
+          <p class="text-muted text-small mb-md">正在生成卦象解读...</p>
+          <div class="loading-spinner mx-auto"></div>
+        </div>
+      </template>
+      <template x-if="completedCount > 0 && step !== 'done'">
+        <div class="mt-sm">
+          <span class="text-muted text-small">
+            已完成 <span x-text="completedCount"></span>/6 爻
+          </span>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- 隐藏表单，提交给后端 -->
+  <form id="coin-form" action="/divine/coin/toss" method="post" class="hidden">
+    <input type="hidden" id="coin-values-input" name="values" value="">
+    <input type="hidden" id="coin-seed-input" name="seed" value="">
+    <input type="hidden" id="coin-question-input" name="question" value="">
+  </form>
+</div>
+{% endblock %}

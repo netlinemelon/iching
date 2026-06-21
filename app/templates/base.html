@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="易经八卦占卜 - 传承千年的东方智慧。金钱卦、梅花易数在线占卜，六十四卦查询学习。">
+  <meta name="theme-color" content="#8B0000">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{% block og_title %}八卦 - I Ching Divination{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}易经八卦占卜 - 传承千年的东方智慧。金钱卦、梅花易数在线占卜，六十四卦查询学习。{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="八卦 I Ching">
+  <meta property="og:locale" content="zh_CN">
+
+  <title>{% block title %}八卦 - I Ching Divination{% endblock %}</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/static/css/themes.css">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/hexagram.css">
+  <link rel="stylesheet" href="/static/css/animations.css">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- 导航栏 -->
+    {% include "components/navigation.html" %}
+
+    <!-- 主内容 -->
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="site-footer">
+      <div class="container">
+        <ul class="footer-links">
+          <li><a href="/">首页</a></li>
+          <li><a href="/divine/">占卜</a></li>
+          <li><a href="/hexagram/">六十四卦</a></li>
+          <li><a href="/study/">学习</a></li>
+          <li><a href="/history/">历史</a></li>
+        </ul>
+        <p>八卦 - I Ching Divination &copy; 2026 | 学习研究用途 | 群经之首，大道之源</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- JavaScript -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="/static/js/theme.js"></script>
+  <script src="/static/js/hexagram.js"></script>
+  <script src="/static/js/coin.js"></script>
+  <script src="/static/js/ai.js"></script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}搜索：{{ search_query }} - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <a href="/hexagram/" class="back-link">&larr; 返回六十四卦</a>
+  <h1>搜索卦象</h1>
+
+  <form action="/hexagram/search" method="get" class="search-bar" style="max-width: 500px; margin-bottom: var(--space-lg);">
+    <label for="search-input" class="sr-only">搜索卦名、卦辞、爻辞</label>
+    <input type="text" id="search-input" name="q" value="{{ search_query }}" placeholder="搜索卦名、卦辞、爻辞..." class="search-input" minlength="1" required>
+    <button type="submit" class="btn btn-primary">搜索</button>
+  </form>
+
+  {% if search_message %}
+  <div class="message-info">{{ search_message }}</div>
+  {% endif %}
+
+  {% if search_results %}
+  <div style="display:flex; flex-direction:column; gap: var(--space-sm);">
+    {% for hex in search_results %}
+    <a href="/hexagram/{{ hex.number }}" class="card card-elevated" style="display:flex; align-items:center; gap: var(--space-md); text-decoration:none; color: inherit;">
+      <span style="font-size: 2rem;">{{ hex.unicode }}</span>
+      <div style="flex:1;">
+        <div style="font-weight:bold; font-size: 1.05rem;">{{ hex.name_cn }}（{{ hex.name_pinyin }}）</div>
+        <div class="text-muted" style="font-size: var(--font-small);">
+          第{{ hex.number }}卦 · {{ hex.upper_trigram_name }}{{ hex.lower_trigram_name }}
+        </div>
+        <div style="font-size: var(--font-small); color: var(--color-text-secondary); margin-top: var(--space-xs);">
+          {{ hex.judgment_brief }}
+        </div>
+      </div>
+      <span style="color: var(--color-primary); font-weight:600;">查看 &rarr;</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if search_query and not search_results %}
+  <div class="empty-state">
+    <p>未找到与 <strong>"{{ search_query }}"</strong> 相关的卦象。</p>
+    <p class="text-muted">请尝试搜索卦名（如"乾"、"坤"）、卦辞或爻辞中的关键词。</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

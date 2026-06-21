@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}未找到 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <div class="empty-state" style="min-height: 40vh; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div class="empty-icon">🔍</div>
+    <h2>未找到</h2>
+    <p>{{ message }}</p>
+    <div class="btn-group mt-lg">
+      <a href="/divine/" class="btn btn-primary">重新占卜</a>
+      <a href="/" class="btn btn-ghost">返回首页</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

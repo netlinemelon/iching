@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}占卜详情 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+{% from "components/hexagram_svg.html" import render_hexagram_svg %}
+
+{% set original = record.original_hexagram %}
+{% set changed = record.changed_hexagram %}
+{% set interp = record.interpretation %}
+{% set body_use = record.body_use %}
+{% set texts = interp._texts if interp._texts is defined else {} %}
+
+<div class="page-enter">
+  <a href="/history/" class="back-link">&larr; 返回历史列表</a>
+
+  <div style="text-align:center; margin-bottom: var(--space-lg);">
+    <h1>占卜详情</h1>
+    <p class="record-meta">
+      占卜时间：{{ record.created_at[:10] }} {{ record.created_at[11:19] }}
+      {% if record.method %} · 方法：{% if record.method == 'coin' %}金钱卦{% elif record.method == 'yarrow' %}蓍草法{% elif record.method == 'time' %}时间卦{% elif record.method == 'number' %}数字卦{% elif record.method == 'plum-blossom' %}梅花易数{% else %}{{ record.method }}{% endif %}{% endif %}
+      {% if record.is_favorite %} · ★ 已收藏{% endif %}
+    </p>
+
+    {% if record.question %}
+    <div class="card" style="background: var(--color-bg-section); max-width:500px; margin:var(--space-md) auto;">
+      <h4 style="margin-bottom:var(--space-xs);">所问之事</h4>
+      <p style="margin-bottom:0;">{{ record.question }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 选项卡 -->
+  <div class="tabs-container" x-data="{ tab: 'interpretation' }">
+    <div class="tab-buttons" role="tablist">
+      <button class="tab-btn" role="tab" :class="{ 'active': tab === 'interpretation' }" :aria-selected="tab === 'interpretation'" @click="tab = 'interpretation'" aria-controls="tab-panel-interpretation">解卦结果</button>
+      <button class="tab-btn" role="tab" :class="{ 'active': tab === 'related' }" :aria-selected="tab === 'related'" @click="tab = 'related'" aria-controls="tab-panel-related">关联卦象</button>
+      <button class="tab-btn" role="tab" :class="{ 'active': tab === 'lines' }" :aria-selected="tab === 'lines'" @click="tab = 'lines'" aria-controls="tab-panel-lines">六爻详情</button>
+      {% if record.toss_details %}
+      <button class="tab-btn" role="tab" :class="{ 'active': tab === 'toss' }" :aria-selected="tab === 'toss'" @click="tab = 'toss'" aria-controls="tab-panel-toss">抛掷记录</button>
+      {% endif %}
+    </div>
+
+    <!-- Tab: 解卦 -->
+    <div class="tab-panel" id="tab-panel-interpretation" role="tabpanel" aria-labelledby="tab-btn-interpretation" x-show="tab === 'interpretation'" x-transition>
+      <section class="page-section">
+        <h2 class="section-title" style="font-size: var(--font-h3);">本卦 · {{ original.name.cn }}（{{ original.name.pinyin }}）</h2>
+        <div class="hexagram-display-large">
+          <div style="flex-shrink:0;">
+            {{ render_hexagram_svg(original, size=180) }}
+          </div>
+          <div>
+            <div class="judgment-block">
+              <h3>卦辞</h3>
+              <p>{{ original.judgment.cn }}</p>
+            </div>
+            {% if original.xiang and original.xiang.cn %}
+            <div class="classic-text">
+              <strong>象曰：</strong>{{ original.xiang.cn }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      {% if changed %}
+      <section class="page-section">
+        <h2 class="section-title" style="font-size: var(--font-h3);">变卦 · {{ changed.name.cn }}（{{ changed.name.pinyin }}）</h2>
+        <div class="hexagram-display-large">
+          <div style="flex-shrink:0;">
+            {{ render_hexagram_svg(changed, size=180) }}
+          </div>
+          <div>
+            <div class="judgment-block" style="border-left-color: var(--color-changing);">
+              <h3 style="color: var(--color-changing);">变卦卦辞</h3>
+              <p>{{ changed.judgment.cn }}</p>
+            </div>
+            {% if changed.xiang and changed.xiang.cn %}
+            <div class="classic-text">
+              <strong>象曰：</strong>{{ changed.xiang.cn }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- 解读 -->
+      <section class="page-section">
+        <h2 class="section-title" style="font-size: var(--font-h3);">解读指引</h2>
+        <div class="changing-info-section">
+          <p><strong>变爻数量：</strong>{{ record.changing_count }}</p>
+          <p><strong>解读规则：</strong>{{ interp.primary_description }}</p>
+        </div>
+
+        {% if texts and texts.get('original_judgment') %}
+        <div class="judgment-block">
+          <h3>本卦卦辞</h3>
+          <p>{{ texts.original_judgment }}</p>
+        </div>
+        {% endif %}
+
+        {% if texts and texts.get('changed_judgment') %}
+        <div class="judgment-block" style="border-left-color: var(--color-changing);">
+          <h3 style="color: var(--color-changing);">变卦卦辞</h3>
+          <p>{{ texts.changed_judgment }}</p>
+        </div>
+        {% endif %}
+
+        {% if texts and texts.get('original_xiang') %}
+        <div class="classic-text">
+          <strong>象传：</strong>{{ texts.original_xiang }}
+        </div>
+        {% endif %}
+
+        {% if texts and texts.get('extra_line') %}
+        <div class="line-card" style="border-left: 3px solid var(--color-accent); background: var(--color-accent-light);">
+          <span class="line-position-name" style="color: var(--color-accent-dark);">{{ texts.extra_line.name }}</span>
+          <div class="line-content">
+            <p class="line-text-main"><strong>{{ texts.extra_line.text }}</strong></p>
+            <p class="line-text-xiang">{{ texts.extra_line.xiang }}</p>
+          </div>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- 体用 -->
+      {% if body_use %}
+      <section class="page-section">
+        <h2 class="section-title" style="font-size: var(--font-h3);">体用生克</h2>
+        <div class="body-use-analysis">
+          <div class="body-use-card-ti">
+            <span class="tag">体卦 · 己身</span>
+            <div style="font-size: 2.5rem; margin: var(--space-sm) 0;">
+              {% set tu = {'乾':'☰','兑':'☱','离':'☲','震':'☳','巽':'☴','坎':'☵','艮':'☶','坤':'☷'} %}
+              {{ tu.get(body_use.body_trigram, '☰') }}
+            </div>
+            <h3>{{ body_use.body_trigram }}</h3>
+            <p class="text-muted">{{ body_use.body_nature }} · {{ body_use.body_element }}</p>
+          </div>
+          <div class="body-use-card-yong">
+            <span class="tag">用卦 · 所事</span>
+            <div style="font-size: 2.5rem; margin: var(--space-sm) 0;">
+              {{ tu.get(body_use.use_trigram, '☷') }}
+            </div>
+            <h3>{{ body_use.use_trigram }}</h3>
+            <p class="text-muted">{{ body_use.use_nature }} · {{ body_use.use_element }}</p>
+          </div>
+          <div class="body-use-relation">
+            <div class="relation-badge {% if body_use.auspicious %}ji{% else %}xiong{% endif %}">
+              {{ body_use.relation }}
+            </div>
+            <p style="margin-top: var(--space-sm);">
+              体（{{ body_use.body_trigram }}·{{ body_use.body_element }}）
+              {% set rel_map = {'比和':'与','生我':'受生于','我生':'生','我克':'克','克我':'受克于'} %}
+              {{ rel_map.get(body_use.relation, body_use.relation) }}
+              用（{{ body_use.use_trigram }}·{{ body_use.use_element }}）
+            </p>
+            <p class="text-muted" style="font-size: var(--font-small);">
+              {% if body_use.auspicious %}吉 — 体用关系有利{% else %}凶 — 体用关系不利，宜谨慎{% endif %}
+            </p>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- 本卦变爻爻辞详情 -->
+      {% if texts and texts.get('changing_lines') %}
+      <section class="page-section">
+        <h3 style="color: var(--color-changing);">变爻爻辞详情</h3>
+        {% for line in texts.changing_lines %}
+        <div class="line-card changing-line-card mb-sm">
+          <span class="line-position-name">{{ line.name }}</span>
+          <div class="line-content">
+            <p class="line-text-main">{{ line.text }}</p>
+            <p class="line-text-xiang">{{ line.xiang }}</p>
+          </div>
+          <span class="line-changing-badge">变爻</span>
+        </div>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      <!-- AI 解读 -->
+      {% if record.ai_interpretation %}
+      <section class="page-section">
+        <div class="card" style="border: 2px solid var(--color-accent); background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-section) 100%);">
+          <h3>🤖 AI 智能解卦</h3>
+          <div class="ai-result mt-md" style="line-height: 1.8;">{{ record.ai_interpretation | replace('\n', '<br>') | safe }}</div>
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    <!-- Tab: 关联 -->
+    <div class="tab-panel" id="tab-panel-related" role="tabpanel" aria-labelledby="tab-btn-related" x-show="tab === 'related'" x-transition>
+      <h2 class="section-title" style="font-size: var(--font-h3);">关联卦象</h2>
+      <div class="related-hexagrams">
+        {% if record.mutual_hexagram %}
+        <a href="/hexagram/{{ record.mutual_hexagram.number }}" class="related-hex-card card-hover">
+          <span class="related-hex-unicode">{{ record.mutual_hexagram.unicode }}</span>
+          <span class="related-hex-label">互卦</span>
+          <span class="related-hex-name">{{ record.mutual_hexagram.name.cn }}</span>
+        </a>
+        {% endif %}
+        {% if record.opposite_hexagram %}
+        <a href="/hexagram/{{ record.opposite_hexagram.number }}" class="related-hex-card card-hover">
+          <span class="related-hex-unicode">{{ record.opposite_hexagram.unicode }}</span>
+          <span class="related-hex-label">错卦</span>
+          <span class="related-hex-name">{{ record.opposite_hexagram.name.cn }}</span>
+        </a>
+        {% endif %}
+        {% if record.reverse_hexagram %}
+        <a href="/hexagram/{{ record.reverse_hexagram.number }}" class="related-hex-card card-hover">
+          <span class="related-hex-unicode">{{ record.reverse_hexagram.unicode }}</span>
+          <span class="related-hex-label">综卦</span>
+          <span class="related-hex-name">{{ record.reverse_hexagram.name.cn }}</span>
+        </a>
+        {% endif %}
+        {% if changed %}
+        <a href="/hexagram/{{ changed.number }}" class="related-hex-card card-hover">
+          <span class="related-hex-unicode">{{ changed.unicode }}</span>
+          <span class="related-hex-label" style="color: var(--color-changing);">变卦</span>
+          <span class="related-hex-name">{{ changed.name.cn }}</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Tab: 六爻 -->
+    <div class="tab-panel" id="tab-panel-lines" role="tabpanel" aria-labelledby="tab-btn-lines" x-show="tab === 'lines'" x-transition>
+      <h2 class="section-title" style="font-size: var(--font-h3);">六爻详情</h2>
+      <div class="lines-vertical-list">
+        {% for line in record.lines|reverse %}
+        <div class="line-card {% if line.changing %}changing-line-card{% endif %}">
+          <span class="line-position-name">{{ line.name }}</span>
+          <div class="line-symbol-render">
+            {% if line.is_yang %}
+            <div class="line-bar-yang" style="width:60px; height:10px; {% if line.changing %}box-shadow: 0 0 8px var(--color-changing-glow);{% endif %}"></div>
+            {% else %}
+            <div class="line-bar-yin" style="width:60px;">
+              <div class="line-bar-yin-left" style="width:22px; height:10px;"></div>
+              <div class="line-bar-yin-right" style="width:22px; height:10px;"></div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="line-content">
+            <p class="line-text-main"><strong>{{ line.text }}</strong></p>
+            <p class="line-text-xiang">{{ line.xiang }}</p>
+          </div>
+          {% if line.changing %}
+          <span class="line-changing-badge">变爻</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- == Tab: 抛掷记录 == -->
+    {% if record.toss_details %}
+    <div class="tab-panel" id="tab-panel-toss" role="tabpanel" aria-labelledby="tab-btn-toss" x-show="tab === 'toss'" x-transition>
+      <h2 class="section-title" style="font-size: var(--font-h3);">铜钱抛掷记录</h2>
+      <p class="section-subtitle">三枚铜钱六次抛掷的详细结果</p>
+
+      <table class="yao-table">
+        <thead>
+          <tr>
+            <th>爻位</th>
+            <th>铜钱结果</th>
+            <th>和值</th>
+            <th>爻类型</th>
+            <th>变爻</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for toss in record.toss_details %}
+          <tr class="{% if toss.changing %}changing-row{% endif %}">
+            <td><strong>{{ toss.line_name }}</strong></td>
+            <td>
+              {% for c in toss.coins %}
+                <span style="display:inline-block; width:28px; height:28px; border-radius:50%;
+                  background: {% if c == 3 %}var(--color-accent){% else %}var(--color-yin-bg){% endif %};
+                  color: {% if c == 3 %}var(--color-secondary){% else %}var(--color-text){% endif %};
+                  text-align:center; line-height:28px; font-size:var(--font-tiny); font-weight:bold;
+                  border: 1px solid var(--color-border-light); margin: 0 2px;">
+                  {{ c }}
+                </span>
+              {% endfor %}
+            </td>
+            <td>{{ toss.sum }}</td>
+            <td>
+              {% if toss.is_yang %}少阳{% else %}少阴{% endif %}
+              {% if toss.sum == 6 %}老阴{% endif %}
+              {% if toss.sum == 9 %}老阳{% endif %}
+            </td>
+            <td>
+              {% if toss.changing %}
+              <span class="line-changing-badge">变爻</span>
+              {% else %}
+              <span class="badge badge-accent">不变</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="card mt-md" style="background: var(--color-bg-section);">
+        <h4>铜钱规则</h4>
+        <p style="font-size: var(--font-small);">正面（字）= 3，反面（花）= 2</p>
+        <p style="font-size: var(--font-small);">三反=6（老阴·变爻），二反一正=7（少阳），一反二正=8（少阴），三正=9（老阳·变爻）</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="action-bar" style="justify-content:center; border-top: 1px solid var(--color-border-light); padding-top: var(--space-xl);">
+    <form action="/history/{{ record.id }}/favorite" method="post" style="display:inline;">
+      <button type="submit" class="btn btn-secondary">
+        {% if record.is_favorite %}取消收藏{% else %}收藏{% endif %}
+      </button>
+    </form>
+    <form action="/history/{{ record.id }}/delete" method="post" style="display:inline;" onsubmit="return confirm('确定删除此记录？')">
+      <button type="submit" class="btn" style="background: var(--color-danger); color: #fff; border-color: var(--color-danger);">删除记录</button>
+    </form>
+    {% if not shared and record.share_token %}
+    <a href="/history/share/{{ record.share_token }}" class="btn btn-ghost" target="_blank">分享链接</a>
+    {% endif %}
+    <a href="/divine/coin" class="btn btn-primary">再来一卦</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,612 @@
+/* ===== 卦象专用样式 — Hexagram Styles ===== */
+
+/* ===== 六爻 SVG 渲染 ===== */
+.hexagram-svg-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hexagram-svg {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+}
+
+.hexagram-line {
+  transition: fill var(--transition-normal), stroke var(--transition-normal);
+}
+
+.hexagram-line.yang-line {
+  fill: var(--color-yang);
+  stroke: var(--color-yang);
+  stroke-width: 1;
+}
+
+.hexagram-line.yin-line-left,
+.hexagram-line.yin-line-right {
+  fill: var(--color-yin);
+  stroke: var(--color-yin);
+  stroke-width: 1;
+}
+
+.hexagram-line.changing-line {
+  stroke: var(--color-changing);
+}
+
+.changing-dot {
+  fill: var(--color-changing);
+}
+
+/* 爻位标签 */
+.line-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--color-text-secondary);
+  dominant-baseline: middle;
+  text-anchor: end;
+}
+
+/* 卦名标签 */
+.hexagram-svg-name {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  fill: var(--color-text);
+  text-anchor: middle;
+  font-weight: bold;
+}
+
+.hexagram-svg-unicode {
+  font-size: 28px;
+  text-anchor: middle;
+}
+
+/* ===== CSS 渲染的六爻线（非SVG备用） ===== */
+.lines-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-md) 0;
+}
+
+.line-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 280px;
+}
+
+.line-position-label {
+  font-family: var(--font-sans);
+  font-size: var(--font-small);
+  color: var(--color-text-secondary);
+  min-width: 3rem;
+  text-align: right;
+}
+
+.line-bar-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16px;
+}
+
+.line-bar-yang {
+  width: 80%;
+  height: 8px;
+  background-color: var(--color-yang);
+  border-radius: 3px;
+}
+
+.line-bar-yin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12%;
+  width: 80%;
+  height: 8px;
+}
+
+.line-bar-yin-left,
+.line-bar-yin-right {
+  width: 40%;
+  height: 8px;
+  background-color: var(--color-yin);
+  border-radius: 3px;
+}
+
+.line-bar.changing {
+  box-shadow: 0 0 8px var(--color-changing-glow);
+}
+
+.line-changing-indicator {
+  font-size: var(--font-small);
+  color: var(--color-changing);
+  font-weight: bold;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+/* ===== 六十四卦网格 ===== */
+.hexagram-grid-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.hexagram-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.hexagram-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm) var(--space-xs);
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  text-align: center;
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.hexagram-cell:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+  background-color: var(--color-bg-highlight);
+}
+
+.hexagram-cell::after {
+  content: attr(data-trigrams);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-tiny);
+  padding: 2px 0;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all var(--transition-normal);
+}
+
+.hexagram-cell:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hex-cell-unicode {
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.hex-cell-number {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.hex-cell-name {
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.hex-cell-pinyin {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+/* ===== 卦象详情展示 ===== */
+.hexagram-display-large {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.hexagram-display-info {
+  flex: 1;
+}
+
+.hexagram-number-badge {
+  display: inline-block;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.hexagram-title {
+  font-size: var(--font-h2);
+  font-weight: bold;
+  color: var(--color-text);
+  margin: var(--space-sm) 0;
+}
+
+.hexagram-subtitle {
+  font-size: var(--font-body);
+  color: var(--color-text-secondary);
+}
+
+/* ===== 卦辞/彖传/象传区块 ===== */
+.judgment-block {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin: var(--space-md) 0;
+}
+
+.judgment-block h3 {
+  color: var(--color-primary);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-h3);
+}
+
+.judgment-block p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.classic-text {
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: var(--color-text);
+  padding: var(--space-md);
+  background: var(--color-bg-section);
+  border-radius: var(--radius-md);
+  margin: var(--space-sm) 0;
+}
+
+/* ===== 爻列表 ===== */
+.lines-vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.line-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+}
+
+.line-card:hover {
+  border-color: var(--color-accent);
+}
+
+.line-card.changing-line-card {
+  background: var(--color-changing-bg);
+  border-left: 3px solid var(--color-changing);
+}
+
+.line-position-name {
+  font-weight: bold;
+  color: var(--color-primary);
+  min-width: 3.5rem;
+  text-align: center;
+  font-size: var(--font-small);
+}
+
+.line-symbol-render {
+  min-width: 80px;
+  display: flex;
+  justify-content: center;
+}
+
+.line-content {
+  flex: 1;
+}
+
+.line-text-main {
+  font-size: var(--font-body);
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.line-text-xiang {
+  font-size: var(--font-small);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.line-changing-badge {
+  display: inline-block;
+  background: var(--color-changing);
+  color: #fff;
+  font-size: var(--font-tiny);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* ===== 相关卦象网格 ===== */
+.related-hexagrams {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+}
+
+.related-hex-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all var(--transition-normal);
+}
+
+.related-hex-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+}
+
+.related-hex-unicode {
+  font-size: 2rem;
+}
+
+.related-hex-label {
+  font-size: var(--font-small);
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-top: var(--space-xs);
+}
+
+.related-hex-name {
+  font-size: var(--font-body);
+  font-weight: bold;
+}
+
+/* ===== 变爻信息区 ===== */
+.changing-info-section {
+  background: var(--color-changing-bg);
+  border: 1px solid rgba(139, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin: var(--space-md) 0;
+}
+
+.changing-info-section h2 {
+  color: var(--color-changing);
+}
+
+/* ===== 体用生克 ===== */
+.body-use-analysis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-md) 0;
+}
+
+.body-use-card-ti,
+.body-use-card-yong {
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-card);
+}
+
+.body-use-card-ti .tag,
+.body-use-card-yong .tag {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: var(--font-tiny);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.body-use-card-ti .tag {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.body-use-card-yong .tag {
+  background: var(--color-accent);
+  color: var(--color-secondary);
+}
+
+.body-use-relation {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-card);
+}
+
+.body-use-relation .relation-badge {
+  display: inline-block;
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: var(--space-sm);
+}
+
+.body-use-relation .relation-badge.ji {
+  background: #2E7D32;
+  color: #fff;
+}
+
+.body-use-relation .relation-badge.xiong {
+  background: #C62828;
+  color: #fff;
+}
+
+/* ===== 六爻表格 ===== */
+.yao-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-md) 0;
+}
+
+.yao-table th,
+.yao-table td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.yao-table th {
+  background: var(--color-bg-section);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: var(--font-small);
+}
+
+.yao-table tr.changing-row {
+  background: var(--color-changing-bg);
+}
+
+.yao-table tr:hover {
+  background: var(--color-bg-highlight);
+}
+
+/* ===== 选项卡 ===== */
+.tabs-container {
+  margin: var(--space-lg) 0;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 2px;
+  border-bottom: 2px solid var(--color-border-light);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-body);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-bg-section);
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-panel {
+  padding: var(--space-lg) 0;
+  animation: tabFadeIn 0.3s ease-out both;
+}
+
+/* ===== 历史记录卡片 ===== */
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all var(--transition-normal);
+}
+
+.history-item:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(2px);
+}
+
+/* ===== 响应式: 768px以下 ===== */
+@media (max-width: 768px) {
+  .hexagram-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .hex-cell-unicode {
+    font-size: 1.4rem;
+  }
+
+  .hexagram-display-large {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .related-hexagrams {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .body-use-analysis {
+    grid-template-columns: 1fr;
+  }
+
+  .line-card {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-small);
+  }
+}
+
+@media (max-width: 480px) {
+  .hexagram-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+  }
+
+  .hex-cell-unicode {
+    font-size: 1.2rem;
+  }
+
+  .hex-cell-name {
+    font-size: 0.75rem;
+  }
+
+  .hex-cell-pinyin {
+    display: none;
+  }
+}

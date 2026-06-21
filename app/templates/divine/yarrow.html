@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}蓍草法占卜 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <a href="/divine/" class="back-link">&larr; 返回占卜方法</a>
+
+  <h1 style="text-align:center;">蓍草法</h1>
+  <p class="section-subtitle">大衍之数五十，其用四十有九 · 最古老的起卦方法</p>
+
+  <!-- 说明 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section);">
+    <h3 style="color: var(--color-primary);">演算说明</h3>
+    <div style="line-height: 2; padding-left: 1.5rem;">
+      <p><strong>《系辞上传》</strong>云：</p>
+      <blockquote style="font-style:italic; border-left: 3px solid var(--color-primary); padding-left: var(--space-md); margin: var(--space-sm) 0;">
+        大衍之数五十，其用四十有九。分而为二以象两，挂一以象三，
+        揲之以四以象四时，归奇于扐以象闰，五岁再闰，故再扐而后挂。
+      </blockquote>
+      <p>蓍草法每爻需经过<strong>三变</strong>（分二、挂一、揲四、归奇），
+      六爻共<strong>十八变</strong>而成一卦。</p>
+    </div>
+  </div>
+
+  <!-- 三变过程 -->
+  <details class="card mb-lg" style="padding: var(--space-md);">
+    <summary style="cursor:pointer; font-weight:600; color: var(--color-primary);">查看演算过程</summary>
+    <div style="margin-top: var(--space-md); line-height: 2;">
+      <p><strong>第一变：</strong>49根蓍草 → 随机分二 → 挂一 → 揲四 → 归奇 → 去5或9根 → 剩44或40</p>
+      <p><strong>第二变：</strong>44或40根 → 重复分二、挂一、揲四、归奇 → 去4或8 → 剩40/36/32</p>
+      <p><strong>第三变：</strong>40/36/32根 → 重复分二、挂一、揲四、归奇 → 去4或8 → 剩36/32/28/24</p>
+      <p><strong>定爻：</strong>剩余蓍草 ÷ 4 = 6(老阴)/7(少阳)/8(少阴)/9(老阳)</p>
+    </div>
+  </details>
+
+  <!-- 概率参考 -->
+  <details class="card mb-lg" style="padding: var(--space-md);">
+    <summary style="cursor:pointer; font-weight:600; color: var(--color-primary);">概率分布</summary>
+    <div style="display:grid; grid-template-columns: repeat(2,1fr); gap: var(--space-sm); margin-top: var(--space-md);">
+      <div style="padding: var(--space-sm); background: var(--color-bg-section); border-radius: var(--radius-sm); text-align:center;">
+        <span style="font-weight:bold;">老阴 (6)</span><br>
+        <span style="color: var(--color-changing);">概率 1/16 (6.25%)</span>
+      </div>
+      <div style="padding: var(--space-sm); background: var(--color-bg-section); border-radius: var(--radius-sm); text-align:center;">
+        <span style="font-weight:bold;">少阳 (7)</span><br>
+        <span style="color: var(--color-yang);">概率 5/16 (31.25%)</span>
+      </div>
+      <div style="padding: var(--space-sm); background: var(--color-bg-section); border-radius: var(--radius-sm); text-align:center;">
+        <span style="font-weight:bold;">少阴 (8)</span><br>
+        <span style="color: var(--color-yin);">概率 7/16 (43.75%)</span>
+      </div>
+      <div style="padding: var(--space-sm); background: var(--color-bg-section); border-radius: var(--radius-sm); text-align:center;">
+        <span style="font-weight:bold;">老阳 (9)</span><br>
+        <span style="color: var(--color-changing);">概率 3/16 (18.75%)</span>
+      </div>
+    </div>
+  </details>
+
+  <!-- 所问之事 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section); max-width: 500px; margin: 0 auto;">
+    <label for="yarrow-question" class="form-label">所问之事</label>
+    <input type="text" id="yarrow-question" name="question" class="form-input"
+           placeholder="请输入您要占卜的问题，例如：今年的事业发展如何？"
+           maxlength="200">
+    <p class="text-muted" style="margin-top:var(--space-xs); margin-bottom:0; font-size:var(--font-tiny);">
+      静心凝神，输入您想问的事情
+    </p>
+  </div>
+
+  <!-- 操作 -->
+  <div class="text-center">
+    <form action="/divine/yarrow/cast" method="post">
+      <p class="mb-md text-muted">静心凝神，默念所问之事，然后点击下方按钮</p>
+      <button type="submit" class="btn btn-primary btn-lg">开始演算</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

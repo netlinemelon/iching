@@ -1,0 +1,124 @@
+{% macro render_hexagram_svg(hexagram_data, size=200, show_changing=true, show_labels=true) %}
+  {% set lines = hexagram_data.lines if hexagram_data.lines is defined else [] %}
+  {% set line_h = 14 %}
+  {% set line_gap = 8 %}
+  {% set line_w = 80 %}
+  {% set yin_gap = 10 %}
+  {% set label_w = 40 %}
+  {% set pad = 10 %}
+  {% set h = size %}
+  {% set w = size %}
+  {% set draw_h = 6 * line_h + 5 * line_gap %}
+  {% set start_y = pad + (h - 2 * pad - draw_h) // 2 %}
+  {% set center_x = pad + label_w + (w - pad - label_w - pad) // 2 %}
+  {% set seg_w = (line_w - yin_gap) // 2 %}
+
+  {% if lines|length == 6 %}
+  <svg class="hexagram-svg" xmlns="http://www.w3.org/2000/svg"
+       viewBox="0 0 {{ w }} {{ h }}" width="{{ size }}" height="{{ size }}">
+    {% for i in range(6) %}
+      {% set line = lines[i] %}
+      {% set pos = 6 - i %}
+      {% set y = start_y + (pos - 1) * (line_h + line_gap) %}
+
+      {# 判断阴阳：从多种数据格式中检测 #}
+      {% if line.is_yang is defined and line.is_yang %}
+        {% set is_yang = true %}
+      {% elif line.line_type is defined and (line.line_type == 7 or line.line_type == 9) %}
+        {% set is_yang = true %}
+      {% elif line.name is defined and '九' in line.name %}
+        {% set is_yang = true %}
+      {% else %}
+        {% set is_yang = false %}
+      {% endif %}
+
+      {# 判断变爻 #}
+      {% if line.changing is defined and line.changing %}
+        {% set is_changing = true %}
+      {% elif line.line_type is defined and (line.line_type == 6 or line.line_type == 9) %}
+        {% set is_changing = true %}
+      {% else %}
+        {% set is_changing = false %}
+      {% endif %}
+
+      {# 爻名标签 #}
+      {% if line.name is defined and line.name %}
+        {% set line_name = line.name %}
+      {% elif line.original_name is defined and line.original_name %}
+        {% set line_name = line.original_name %}
+      {% else %}
+        {% set line_name = '' %}
+      {% endif %}
+
+      {% if is_yang %}
+      <rect class="hexagram-line yang-line{% if is_changing and show_changing %} changing-line{% endif %}"
+            x="{{ center_x - line_w // 2 }}"
+            y="{{ y }}"
+            width="{{ line_w }}"
+            height="{{ line_h }}"
+            rx="3" ry="3"
+            fill="{% if is_changing and show_changing %}#8B0000{% else %}#C9A96E{% endif %}"
+            {% if is_changing and show_changing %}stroke="#8B0000" stroke-width="1.5"{% endif %}/>
+      {% else %}
+      <rect class="hexagram-line yin-line-left{% if is_changing and show_changing %} changing-line{% endif %}"
+            x="{{ center_x - line_w // 2 }}"
+            y="{{ y }}"
+            width="{{ seg_w }}"
+            height="{{ line_h }}"
+            rx="3" ry="3"
+            fill="{% if is_changing and show_changing %}#8B0000{% else %}#4A4A4A{% endif %}"/>
+      <rect class="hexagram-line yin-line-right{% if is_changing and show_changing %} changing-line{% endif %}"
+            x="{{ center_x + line_w // 2 - seg_w }}"
+            y="{{ y }}"
+            width="{{ seg_w }}"
+            height="{{ line_h }}"
+            rx="3" ry="3"
+            fill="{% if is_changing and show_changing %}#8B0000{% else %}#4A4A4A{% endif %}"/>
+      {% endif %}
+
+      {% if is_changing and show_changing %}
+      <text class="changing-marker"
+            x="{{ center_x + line_w // 2 + 6 }}"
+            y="{{ y + line_h // 2 }}"
+            fill="#8B0000"
+            font-size="12"
+            font-weight="bold"
+            dominant-baseline="middle">×</text>
+      {% endif %}
+
+      {% if show_labels and line_name %}
+      <text class="line-label"
+            x="{{ pad + label_w - 4 }}"
+            y="{{ y + line_h // 2 }}"
+            fill="#5A5A6E"
+            font-size="11"
+            font-family="Microsoft YaHei, PingFang SC, sans-serif"
+            text-anchor="end"
+            dominant-baseline="middle">{{ line_name }}</text>
+      {% endif %}
+    {% endfor %}
+
+    {% if hexagram_data.name is defined %}
+    <text class="hexagram-svg-name"
+          x="{{ w // 2 + 8 }}"
+          y="{{ h - 4 }}"
+          font-size="13"
+          font-family="Microsoft YaHei, PingFang SC, sans-serif"
+          fill="#1A1A2E"
+          text-anchor="middle"
+          dominant-baseline="auto">
+      {% if hexagram_data.name.cn is defined %}{{ hexagram_data.name.cn }}{% elif hexagram_data.name_cn is defined %}{{ hexagram_data.name_cn }}{% endif %}
+    </text>
+    {% endif %}
+
+    {% if hexagram_data.unicode is defined %}
+    <text class="hexagram-svg-unicode"
+          x="{{ w // 2 - 12 }}"
+          y="{{ h - 4 }}"
+          font-size="24"
+          text-anchor="middle"
+          dominant-baseline="auto">{{ hexagram_data.unicode }}</text>
+    {% endif %}
+  </svg>
+  {% endif %}
+{% endmacro %}

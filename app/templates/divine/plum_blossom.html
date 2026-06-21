@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}梅花易数占卜 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <a href="/divine/" class="back-link">&larr; 返回占卜方法</a>
+
+  <h1 style="text-align:center;">梅花易数</h1>
+  <p class="section-subtitle">邵雍所创 · 以物象、方位、时间起卦 · 万物皆可占</p>
+
+  <!-- 说明 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section);">
+    <h3 style="color: var(--color-primary);">起卦方法</h3>
+    <ul style="line-height: 2; padding-left: 1.5rem;">
+      <li>选择<strong>上卦</strong>（外卦/用卦）— 代表外部环境、所问之事</li>
+      <li>选择<strong>下卦</strong>（内卦/体卦）— 代表问卦者自身</li>
+      <li>系统自动根据当前时辰确定<strong>动爻</strong></li>
+      <li>起卦后将显示<strong>体用生克</strong>分析</li>
+    </ul>
+  </div>
+
+  <!-- 所问之事 -->
+  <div class="card mb-lg" style="background: var(--color-bg-section); max-width: 500px; margin: 0 auto;">
+    <label for="plum-question" class="form-label">所问之事</label>
+    <input type="text" id="plum-question" name="question" class="form-input"
+           placeholder="请输入您要占卜的问题..."
+           maxlength="200">
+    <p class="text-muted" style="margin-top:var(--space-xs); margin-bottom:0; font-size:var(--font-tiny);">
+      静心凝神，输入您想问的事情
+    </p>
+  </div>
+
+  <!-- 八卦选择 -->
+  <div class="card mb-lg" style="max-width: 600px; margin: 0 auto;">
+    <form action="/divine/plum-blossom/cast" method="post">
+      <div style="margin-bottom: var(--space-lg);">
+        <label for="upper_trigram" style="display:block; margin-bottom: var(--space-sm); font-weight:600;">
+          上卦（用卦 · 外部环境/所问之事）
+        </label>
+        <select id="upper_trigram" name="upper_trigram" required
+                style="width:100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 1.1rem;">
+          <option value="">-- 请选择上卦 --</option>
+          {% for name in trigram_names %}
+          <option value="{{ name }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom: var(--space-lg);">
+        <label for="lower_trigram" style="display:block; margin-bottom: var(--space-sm); font-weight:600;">
+          下卦（体卦 · 问卦者自身）
+        </label>
+        <select id="lower_trigram" name="lower_trigram" required
+                style="width:100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 1.1rem;">
+          <option value="">-- 请选择下卦 --</option>
+          {% for name in trigram_names %}
+          <option value="{{ name }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="text-center">
+        <p class="mb-md text-muted">选择上下卦后点击起卦，动爻将根据当前时辰自动确定</p>
+        <button type="submit" class="btn btn-primary btn-lg">梅花起卦</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 万物类象参考 -->
+  <details class="card mb-lg" style="padding: var(--space-md);">
+    <summary style="cursor:pointer; font-weight:600; color: var(--color-primary);">查看万物类象表</summary>
+    <div style="display:grid; grid-template-columns: repeat(2,1fr); gap: var(--space-sm); margin-top: var(--space-md);">
+      {% for trigram, keywords in phenomena.items() %}
+      <div style="padding: var(--space-sm); background: var(--color-bg-section); border-radius: var(--radius-sm);">
+        <span style="font-weight:bold; font-size: 1.1rem;">{{ trigram }}</span>
+        <p style="font-size: var(--font-small); color: var(--color-text-secondary); margin-top: var(--space-xs);">
+          {{ keywords | join('、') }}
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+</div>
+{% endblock %}

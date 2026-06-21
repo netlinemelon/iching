@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}占卜历史 - 八卦 I Ching{% endblock %}
+
+{% block content %}
+<section class="page-enter">
+  <h1>占卜历史</h1>
+  <p class="text-muted" style="margin-bottom: var(--space-lg);">
+    共 {{ total }} 条记录
+  </p>
+
+  <!-- 筛选栏 -->
+  <div class="filter-bar">
+    <a href="/history/" class="btn {% if not favorite_only %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">全部</a>
+    <a href="/history/?favorite_only=true" class="btn {% if favorite_only %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">仅显示收藏</a>
+  </div>
+
+  {% if records %}
+  <!-- 历史列表 -->
+  <div style="display:flex; flex-direction:column; gap: var(--space-sm);">
+    {% for rec in records %}
+    <div class="history-item">
+      <a href="/history/{{ rec.id }}" class="history-link" style="display:flex; align-items:center; gap: var(--space-md); flex:1; text-decoration:none; color: inherit;">
+        <span style="font-size: 2rem;">{{ rec.original_unicode }}</span>
+        <div style="flex:1;">
+          <div style="font-weight:bold; font-size: 1.05rem; color: var(--color-text);">{{ rec.original_name_cn }}</div>
+          <div style="font-size: var(--font-small); color: var(--color-text-muted);">
+            {{ rec.created_at[:10] }} {{ rec.created_at[11:16] }}
+            {% if rec.changing_count > 0 %}
+            · 变{{ rec.changing_count }}爻
+            {% else %}
+            · 无变爻
+            {% endif %}
+            {% if rec.changed_name_cn %}
+            · 变卦：{{ rec.changed_name_cn }}
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      <div style="display:flex; gap: var(--space-xs); align-items:center;">
+        <form action="/history/{{ rec.id }}/favorite" method="post" style="display:inline;">
+          <button type="submit" class="btn btn-ghost btn-sm" style="font-size: 1.2rem; padding: 0.2rem 0.5rem;">
+            {% if rec.is_favorite %}★{% else %}☆{% endif %}
+          </button>
+        </form>
+        <form action="/history/{{ rec.id }}/delete" method="post" style="display:inline;" onsubmit="return confirm('确定删除此记录？')">
+          <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--color-danger);">删除</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 分页 -->
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if has_prev %}
+    <a href="/history/?page={{ prev_page }}{% if favorite_only %}&favorite_only=true{% endif %}" class="page-link">&laquo; 上一页</a>
+    {% endif %}
+
+    {% for p in page_range %}
+    <a href="/history/?page={{ p }}{% if favorite_only %}&favorite_only=true{% endif %}" class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+
+    {% if has_next %}
+    <a href="/history/?page={{ next_page }}{% if favorite_only %}&favorite_only=true{% endif %}" class="page-link">下一页 &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- 空状态 -->
+  <div class="empty-state">
+    <div class="empty-icon">📿</div>
+    <h2>暂无占卜记录</h2>
+    <p>您的占卜历史将显示在这里。</p>
+    <a href="/divine/coin" class="btn btn-primary mt-lg">开始第一次占卜</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

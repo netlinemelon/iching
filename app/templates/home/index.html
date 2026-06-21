@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 八卦 I Ching Divination{% endblock %}
+
+{% block content %}
+<!-- Hero 区域 -->
+<section class="hero-section page-enter">
+  <span class="hero-icon">☯</span>
+  <h1 class="hero-title">易经 · 八卦占卜</h1>
+  <p class="hero-subtitle">探寻天地之道，明辨吉凶祸福</p>
+  <p class="hero-desc">
+    《易经》为群经之首，大道之源。八卦系统通过阴阳符号的组合变化，
+    揭示宇宙万物运行的根本规律。本应用提供传统金钱卦占卜、
+    卦象查询与学习研读等功能，助您探索易经的深邃智慧。
+  </p>
+</section>
+
+<!-- 快速占卜入口 -->
+<section class="page-section slide-up">
+  <h2 class="section-title">开始占卜</h2>
+  <p class="section-subtitle">选择一种起卦方式，开始您的易经探索之旅</p>
+
+  {% set method_icons = {'金钱卦': '🪙', '蓍草法': '🌿', '时间卦': '🕐', '数字卦': '🔢', '梅花易数': '🌸'} %}
+  <div class="card-grid">
+    {% for method in quick_methods %}
+    <a href="{{ method.path }}" class="card card-elevated card-hover">
+      <span class="card-icon-large">{{ method_icons.get(method.name, '☯') }}</span>
+      <h3 class="card-title">{{ method.name }}</h3>
+      <p class="card-desc">{{ method.desc }}</p>
+      {% if '敬请期待' in method.desc %}
+      <span class="status-badge coming-soon">即将开放</span>
+      {% else %}
+      <span class="status-badge ready">可用</span>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- 今日推荐 -->
+{% if featured %}
+<section class="page-section slide-up slide-up-delay-1">
+  <h2 class="section-title">今日推荐</h2>
+  <div class="card" style="text-align:center; max-width: 500px; margin: 0 auto;">
+    <div style="font-size: 4rem; line-height: 1.2; margin-bottom: var(--space-sm);">{{ featured.unicode }}</div>
+    <h3 style="font-size: var(--font-h3); color: var(--color-primary); margin-bottom: var(--space-xs);">
+      {{ featured.name.cn }}（{{ featured.name.pinyin }}）
+    </h3>
+    <p class="text-muted" style="margin-bottom: var(--space-md);">
+      第{{ featured.number }}卦 · 上{{ featured.upper_name }}下{{ featured.lower_name }}
+    </p>
+    <blockquote style="text-align: left;">{{ featured.judgment.cn }}</blockquote>
+    <a href="/hexagram/{{ featured.number }}" class="btn btn-primary mt-md">查看详情 &rarr;</a>
+  </div>
+</section>
+{% endif %}
+
+<!-- 什么是易经占卜 -->
+<section class="page-section slide-up slide-up-delay-2">
+  <h2 class="section-title">什么是易经占卜？</h2>
+  <p class="section-subtitle">传承三千年的智慧工具，帮助您认识当下、把握时机</p>
+
+  <div class="card-grid">
+    <div class="card card-elevated">
+      <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📿</div>
+      <h3 class="card-title">起卦</h3>
+      <p class="card-desc">
+        选择起卦方式（金钱卦、蓍草法等），通过随机过程生成六爻卦象。
+        每一次起卦都是当下时空能量的一次映射。
+      </p>
+    </div>
+    <div class="card card-elevated">
+      <div style="font-size: 2rem; margin-bottom: var(--space-sm);">䷀</div>
+      <h3 class="card-title">得卦</h3>
+      <p class="card-desc">
+        六爻从下到上排列成卦，分为下卦（内卦）和上卦（外卦）。
+        若有变爻，则同时得到变卦，揭示事物的发展变化趋势。
+      </p>
+    </div>
+    <div class="card card-elevated">
+      <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📜</div>
+      <h3 class="card-title">解卦</h3>
+      <p class="card-desc">
+        根据朱熹变爻规则解读卦辞爻辞，结合体用生克关系分析五行生克。
+        易经的智慧在于帮助您认识当下、把握时机，而非绝对预言。
+      </p>
+    </div>
+  </div>
+
+  <div class="text-center mt-lg">
+    <a href="/study/" class="btn btn-secondary">了解更多 &rarr;</a>
+  </div>
+</section>
+
+<!-- 八卦快速预览 -->
+<section class="page-section slide-up slide-up-delay-3">
+  <h2 class="section-title">八卦总览</h2>
+  <p class="section-subtitle">八卦是易经的基础符号系统，象征天地万物的八种基本状态</p>
+  {% set trigrams_data = [
+    {"name": "乾", "nature": "天", "unicode": "☰", "element": "金"},
+    {"name": "兑", "nature": "泽", "unicode": "☱", "element": "金"},
+    {"name": "离", "nature": "火", "unicode": "☲", "element": "火"},
+    {"name": "震", "nature": "雷", "unicode": "☳", "element": "木"},
+    {"name": "巽", "nature": "风", "unicode": "☴", "element": "木"},
+    {"name": "坎", "nature": "水", "unicode": "☵", "element": "水"},
+    {"name": "艮", "nature": "山", "unicode": "☶", "element": "土"},
+    {"name": "坤", "nature": "地", "unicode": "☷", "element": "土"},
+  ] %}
+  <div class="card-grid" style="grid-template-columns: repeat(4, 1fr);">
+    {% for t in trigrams_data %}
+    <div class="card card-elevated text-center" style="padding: var(--space-md);">
+      <div style="font-size: 2.5rem; line-height: 1;">{{ t.unicode }}</div>
+      <div style="font-weight: bold; font-size: 1.1rem; margin-top: var(--space-xs);">{{ t.name }}</div>
+      <div class="text-muted" style="font-size: var(--font-small);">{{ t.nature }} · {{ t.element }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-md">
+    <a href="/study/trigrams" class="btn btn-ghost">查看八卦详解 &rarr;</a>
+  </div>
+</section>
+{% endblock %}
