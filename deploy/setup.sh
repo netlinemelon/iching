@@ -207,13 +207,15 @@ case $OS in
     ubuntu|debian)
         NGINX_CONF_DIR="/etc/nginx/sites-available"
         NGINX_ENABLED_DIR="/etc/nginx/sites-enabled"
-        cp $PROJECT_DIR/deploy/iching-http.conf "$NGINX_CONF_DIR/iching-ai.cn"
+        sed "s|/opt/iching|$PROJECT_DIR|g" $PROJECT_DIR/deploy/iching-http.conf \
+            > "$NGINX_CONF_DIR/iching-ai.cn"
         ln -sf "$NGINX_CONF_DIR/iching-ai.cn" "$NGINX_ENABLED_DIR/"
         rm -f "$NGINX_ENABLED_DIR/default"
         ;;
     centos|rhel|fedora|alinux|alinux2|alinux3)
         NGINX_CONF_DIR="/etc/nginx/conf.d"
-        cp $PROJECT_DIR/deploy/iching-http.conf "$NGINX_CONF_DIR/iching-ai.cn.conf"
+        sed "s|/opt/iching|$PROJECT_DIR|g" $PROJECT_DIR/deploy/iching-http.conf \
+            > "$NGINX_CONF_DIR/iching-ai.cn.conf"
         ;;
 esac
 
@@ -243,7 +245,9 @@ info "=========================================="
 info "步骤 8/10：部署 systemd 服务"
 info "=========================================="
 
-cp $PROJECT_DIR/deploy/iching.service /etc/systemd/system/iching.service
+# 将服务文件中的路径占位符替换为实际项目目录
+sed "s|/opt/iching|$PROJECT_DIR|g" $PROJECT_DIR/deploy/iching.service \
+    > /etc/systemd/system/iching.service
 systemctl daemon-reload
 
 info "systemd 服务部署完成。"
