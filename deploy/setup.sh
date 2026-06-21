@@ -94,29 +94,36 @@ else
     info "用户 www-data 创建完成。"
 fi
 
-# 创建应用相关目录
-mkdir -p /opt/iching/data
-mkdir -p /opt/iching/deploy
-info "应用目录 /opt/iching 准备就绪。"
-
 # =============================================================================
-# 步骤 3：克隆项目代码
+# 步骤 3：定位并准备项目代码
+# =============================================================================
 # =============================================================================
 info "=========================================="
 info "步骤 3/10：从 GitHub 克隆项目代码"
 info "=========================================="
 
-if [ -f "/opt/iching/run.py" ] && [ ! -d "/opt/iching/.git" ]; then
+# 自动检测项目目录
+DETECTED=""
+if [ -f "./run.py" ] || [ -f "./app/main.py" ]; then
+    DETECTED="$(pwd)"
+elif [ -f "/opt/iching/run.py" ] || [ -f "/opt/iching/app/main.py" ]; then
+    DETECTED="/opt/iching"
+fi
+PROJECT_DIR="${DETECTED:-/opt/iching}"
+mkdir -p "$PROJECT_DIR/data" "$PROJECT_DIR/deploy"
+info "项目目录：$PROJECT_DIR"
+
+if [ -f "$PROJECT_DIR/run.py" ] && [ ! -d "$PROJECT_DIR/.git" ]; then
     # 手动上传 tar.gz 的方式，跳过 git 操作
     info "检测到手动上传的项目文件（无 .git 目录），跳过 git clone/update。"
-elif [ -d "/opt/iching/.git" ]; then
+elif [ -d "$PROJECT_DIR/.git" ]; then
     info "项目已存在，正在更新代码..."
-    cd /opt/iching
+    cd "$PROJECT_DIR"
     git fetch origin
     git reset --hard origin/server
 else
     info "正在克隆项目（server 分支）..."
-    git clone -b server https://github.com/netlinemelon/iching.git /opt/iching
+    git clone -b server https://github.com/netlinemelon/iching.git "$PROJECT_DIR"
 fi
 
 info "代码准备就绪。"
@@ -128,10 +135,10 @@ info "=========================================="
 info "步骤 4/10：创建 Python 虚拟环境"
 info "=========================================="
 
-if [ -d "/opt/iching/venv" ]; then
+if [ -d "$PROJECT_DIR/venv" ]; then
     info "虚拟环境已存在，跳过创建。"
 else
-    python3 -m venv /opt/iching/venv
+    python3 -m venv $PROJECT_DIR/venv
     info "虚拟环境创建完成。"
 fi
 
@@ -142,8 +149,8 @@ info "=========================================="
 info "步骤 5/10：安装 Python 依赖"
 info "=========================================="
 
-/opt/iching/venv/bin/pip install --upgrade pip -q
-/opt/iching/venv/bin/pip install -r /opt/iching/requirements.txt -q
+$PROJECT_DIR/venv/bin/pip install --upgrade pip -q
+$PROJECT_DIR/venv/bin/pip install -r $PROJECT_DIR/requirements.txt -q
 
 info "Python 依赖安装完成。"
 
@@ -154,16 +161,16 @@ info "=========================================="
 info "步骤 6/10：配置 .env 环境变量"
 info "=========================================="
 
-if [ -f "/opt/iching/.env" ]; then
+if [ -f "$PROJECT_DIR/.env" ]; then
     warn "已存在 .env 文件，将保留现有配置。"
-    warn "如需重新配置，请手动编辑 /opt/iching/.env"
+    warn "如需重新配置，请手动编辑 $PROJECT_DIR/.env"
 else
     # 从示例文件复制
-    cp /opt/iching/.env.example /opt/iching/.env
+    cp $PROJECT_DIR/.env.example $PROJECT_DIR/.env
 
     echo ""
     echo -e "${YELLOW}==================== 重要配置 ====================${NC}"
-    echo -e "${YELLOW}请编辑 /opt/iching/.env 文件，填入以下关键配置：${NC}"
+    echo -e "${YELLOW}请编辑 $PROJECT_DIR/.env 文件，填入以下关键配置：${NC}"
     echo ""
     echo "  1. ANTHROPIC_API_KEY — AI 解卦 API 密钥（必填）"
     echo "     获取方式：https://platform.deepseek.com/"
@@ -179,11 +186,11 @@ else
     if [ "$EDIT_ENV" = "y" ] || [ "$EDIT_ENV" = "Y" ]; then
         # 检测可用的编辑器
         if command -v nano &>/dev/null; then
-            nano /opt/iching/.env
+            nano $PROJECT_DIR/.env
         elif command -v vim &>/dev/null; then
-            vim /opt/iching/.env
+            vim $PROJECT_DIR/.env
         else
-            vi /opt/iching/.env
+            vi $PROJECT_DIR/.env
         fi
     fi
 fi
@@ -202,7 +209,7 @@ case $OS in
         NGINX_CONF_DIR="/etc/nginx/sites-available"
         NGINX_ENABLED_DIR="/etc/nginx/sites-enabled"
 
-        cp /opt/iching/deploy/iching-nginx.conf "$NGINX_CONF_DIR/iching-ai.cn"
+        cp $PROJECT_DIR/deploy/iching-nginx.conf "$NGINX_CONF_DIR/iching-ai.cn"
 
         # 创建软链接启用站点
         ln -sf "$NGINX_CONF_DIR/iching-ai.cn" "$NGINX_ENABLED_DIR/"
@@ -214,7 +221,7 @@ case $OS in
         # CentOS/RHEL 使用 conf.d 目录
         NGINX_CONF_DIR="/etc/nginx/conf.d"
 
-        cp /opt/iching/deploy/iching-nginx.conf "$NGINX_CONF_DIR/iching-ai.cn.conf"
+        cp $PROJECT_DIR/deploy/iching-nginx.conf "$NGINX_CONF_DIR/iching-ai.cn.conf"
 
         # CentOS 默认关闭了 443，需要确认 SELinux
         if command -v getenforce &>/dev/null && [ "$(getenforce)" = "Enforcing" ]; then
@@ -240,7 +247,7 @@ info "=========================================="
 info "步骤 8/10：部署 systemd 服务"
 info "=========================================="
 
-cp /opt/iching/deploy/iching.service /etc/systemd/system/iching.service
+cp $PROJECT_DIR/deploy/iching.service /etc/systemd/system/iching.service
 systemctl daemon-reload
 
 info "systemd 服务部署完成。"
@@ -253,9 +260,9 @@ info "步骤 9/10：设置目录权限"
 info "=========================================="
 
 # 确保 www-data 用户能读写应用目录和数据库
-chown -R www-data:www-data /opt/iching
-chmod 755 /opt/iching
-chmod 755 /opt/iching/data
+chown -R www-data:www-data $PROJECT_DIR
+chmod 755 $PROJECT_DIR
+chmod 755 $PROJECT_DIR/data
 
 # 确保 nginx 能读取静态文件（www-data 或 nginx 用户）
 # nginx 以 nginx 用户运行（alinux/CentOS），确保能读 www-data 的文件
@@ -264,7 +271,7 @@ if [ "$OS" = "centos" ] || [ "$OS" = "rhel" ] || [ "$OS" = "alinux" ] || [ "$OS"
 fi
 # 允许 nginx 访问用户目录（SELinux 场景）
 chmod 755 /opt
-chmod 755 /opt/iching
+chmod 755 $PROJECT_DIR
 # SELinux: 允许 nginx 反向代理到后端
 setsebool -P httpd_can_network_connect 1 2>/dev/null || true
 
@@ -315,7 +322,7 @@ echo -e "  4. ${YELLOW}查看应用日志${NC}："
 echo -e "     journalctl -u iching -f"
 echo ""
 echo -e "  5. ${YELLOW}编辑 .env 配置${NC}（如需修改）："
-echo -e "     nano /opt/iching/.env && systemctl restart iching"
+echo -e "     nano $PROJECT_DIR/.env && systemctl restart iching"
 echo ""
 
 # 检查是否已申请 SSL 证书
