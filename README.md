@@ -10,6 +10,15 @@
 
 > A modern web-based I Ching divination tool. 5 casting methods, full classic text reference, AI-powered interpretation via DeepSeek LLM.
 
+## 📸 预览
+
+<p align="center">
+  <img src="docs/screenshots/home.png" alt="首页" width="32%">
+  <img src="docs/screenshots/hexagram_grid.png" alt="六十四卦" width="32%">
+  <img src="docs/screenshots/ai_result.png" alt="AI解卦" width="32%">
+  <br><sub>首页 · 六十四卦网格 · AI 智能解卦</sub>
+</p>
+
 ## ✨ 功能
 
 - **5 种起卦方法**：金钱卦、蓍草法（大衍筮法）、时间卦、数字卦、梅花易数

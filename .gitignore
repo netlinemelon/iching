@@ -34,5 +34,3 @@ data/validate_hexagrams.py
 # Redis dumps
 *.rdb
 
-# Screenshots (generated for promo)
-screenshots/
