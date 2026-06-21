@@ -505,7 +505,6 @@ async def api_ai_interpret(
             db_result = await session.execute(
                 select(DivinationRecord).where(
                     DivinationRecord.share_token == token,
-                    DivinationRecord.client_id == request.state.client_id,
                 )
             )
             record = db_result.scalar_one_or_none()
@@ -545,7 +544,6 @@ async def api_ai_interpret(
             db_result = await session.execute(
                 select(DivinationRecord).where(
                     DivinationRecord.share_token == token,
-                    DivinationRecord.client_id == request.state.client_id,
                 )
             )
             record = db_result.scalar_one_or_none()
