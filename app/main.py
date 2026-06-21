@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -52,6 +52,30 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 log(10, f"app: FastAPI app created, title='{settings.app_name}'")
+
+
+# 全局熔断中间件
+from starlette.responses import JSONResponse
+from app.limits import check_rate_limit, get_client_ip
+
+@app.middleware("http")
+async def circuit_breaker_middleware(request: Request, call_next):
+    if request.url.path.startswith("/static"):
+        return await call_next(request)
+
+    ip = get_client_ip(request)
+    allowed, info = check_rate_limit(ip)
+    if not allowed:
+        return JSONResponse(
+            status_code=429,
+            content={"error": info.get("error", "请求过于频繁"), "code": "RATE_LIMITED"},
+            headers={"Retry-After": str(info.get("retry_after", 60))},
+        )
+
+    response = await call_next(request)
+    response.headers["X-RateLimit-Remaining"] = str(info.get("remaining", "?"))
+    return response
+
 
 app.mount("/static", StaticFiles(directory=str(settings.static_dir)), name="static")
 

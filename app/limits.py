@@ -80,3 +80,46 @@ def get_client_ip(request) -> str:
     if real_ip:
         return real_ip.strip()
     return request.client.host if request.client else "127.0.0.1"
+
+
+# ============================================================
+# 熔断器 — 滑动窗口 + 突刺检测 + IP 封禁
+# ============================================================
+
+_IP_WINDOW: dict[str, list[float]] = defaultdict(list)   # {ip: [timestamps]}
+_IP_BANNED: dict[str, float] = {}                         # {ip: 解封时间}
+
+_IP_RATE_PER_MIN = 120          # 每IP每分钟最大请求
+_BURST_PER_SEC = 10             # 每秒突刺阈值
+_BAN_SECONDS = 300              # 封禁时长(秒)
+
+
+def check_rate_limit(client_ip: str) -> tuple[bool, dict]:
+    """熔断检查。返回 (放行?, {info})。"""
+    now = time.time()
+
+    # 封禁中
+    if client_ip in _IP_BANNED:
+        if now < _IP_BANNED[client_ip]:
+            remain = int(_IP_BANNED[client_ip] - now)
+            return False, {"error": "IP已被临时封禁", "retry_after": remain}
+        del _IP_BANNED[client_ip]
+
+    # 清理 60 秒前的旧记录
+    cutoff = now - 60
+    _IP_WINDOW[client_ip] = [t for t in _IP_WINDOW[client_ip] if t > cutoff]
+    _IP_WINDOW[client_ip].append(now)
+
+    # 突刺检测
+    burst = sum(1 for t in _IP_WINDOW[client_ip] if t > now - 1)
+    if burst > _BURST_PER_SEC:
+        _IP_BANNED[client_ip] = now + _BAN_SECONDS
+        log(810, f"limits: IP BANNED {client_ip[:15]}... burst={burst}/s, {_BAN_SECONDS}s ban")
+        return False, {"error": "检测到异常访问频率，IP已被封禁5分钟", "retry_after": _BAN_SECONDS}
+
+    # 滑动窗口
+    used = len(_IP_WINDOW[client_ip])
+    if used > _IP_RATE_PER_MIN:
+        return False, {"error": "请求过于频繁，请稍后重试", "retry_after": 60}
+
+    return True, {"remaining": _IP_RATE_PER_MIN - used}
