@@ -11,13 +11,9 @@
         <span>微信</span>
       </div>
       <div class="qr-item">
-        <div class="qr-placeholder">
-          <span>支付宝<br>收款码</span>
-          <small>放入 static/img/alipay-qr.jpg</small>
-        </div>
+        <img src="/static/img/alipay-qr.jpg" alt="支付宝" onerror="this.parentElement.innerHTML='<div class=qr-placeholder><span>支付宝<br>收款码</span></div><span>支付宝</span>'">
         <span>支付宝</span>
       </div>
     </div>
-    <p class="text-tiny text-muted" style="margin-top: var(--space-sm); margin-bottom: 0;">将收款码图片放入 static/img/ 目录，替换同名文件即可</p>
   </div>
 </div>
