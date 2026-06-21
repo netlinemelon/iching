@@ -50,7 +50,7 @@ case $OS in
         apt install -y python3 python3-venv python3-dev \
                        nginx git curl net-tools certbot python3-certbot-nginx
         ;;
-    centos|rhel|fedora)
+    centos|rhel|fedora|alinux|alinux2|alinux3)
         info "检测到操作系统：$OS，使用 yum 安装依赖"
         yum install -y epel-release
         yum install -y python3 python3-pip python3-devel \
@@ -194,7 +194,7 @@ case $OS in
         # 移除默认站点
         rm -f "$NGINX_ENABLED_DIR/default"
         ;;
-    centos|rhel|fedora)
+    centos|rhel|fedora|alinux|alinux2|alinux3)
         # CentOS/RHEL 使用 conf.d 目录
         NGINX_CONF_DIR="/etc/nginx/conf.d"
 
