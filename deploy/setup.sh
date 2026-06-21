@@ -50,11 +50,26 @@ case $OS in
         apt install -y python3 python3-venv python3-dev \
                        nginx git curl net-tools certbot python3-certbot-nginx
         ;;
-    centos|rhel|fedora|alinux|alinux2|alinux3)
+    centos|rhel|fedora)
         info "检测到操作系统：$OS，使用 yum 安装依赖"
         yum install -y epel-release
         yum install -y python3 python3-pip python3-devel \
                        nginx git curl net-tools certbot python3-certbot-nginx
+        ;;
+    alinux|alinux2|alinux3)
+        info "检测到操作系统：$OS（阿里云Linux），使用 dnf 安装依赖"
+        dnf install -y python3 python3-pip python3-devel \
+                       nginx git curl net-tools 2>/dev/null || \
+        yum install -y python3 python3-pip python3-devel \
+                       nginx git curl net-tools
+        # certbot 可能在 alinux 默认源里没有，尝试 dnf 安装，失败则用 pip
+        if ! dnf install -y certbot python3-certbot-nginx 2>/dev/null; then
+            if ! yum install -y certbot python3-certbot-nginx 2>/dev/null; then
+                warn "certbot 系统包不可用，将通过 pip 安装"
+                pip3 install certbot certbot-nginx 2>/dev/null || \
+                python3 -m pip install certbot certbot-nginx
+            fi
+        fi
         ;;
     *)
         error "不支持的操作系统：$OS。请手动安装依赖。"
@@ -91,19 +106,20 @@ info "=========================================="
 info "步骤 3/10：从 GitHub 克隆项目代码"
 info "=========================================="
 
-if [ -d "/opt/iching/.git" ]; then
+if [ -f "/opt/iching/run.py" ] && [ ! -d "/opt/iching/.git" ]; then
+    # 手动上传 tar.gz 的方式，跳过 git 操作
+    info "检测到手动上传的项目文件（无 .git 目录），跳过 git clone/update。"
+elif [ -d "/opt/iching/.git" ]; then
     info "项目已存在，正在更新代码..."
     cd /opt/iching
     git fetch origin
     git reset --hard origin/server
 else
     info "正在克隆项目（server 分支）..."
-    # 如果目录非空但无 .git，先清空
-    rm -rf /opt/iching/*
     git clone -b server https://github.com/netlinemelon/iching.git /opt/iching
 fi
 
-info "代码克隆/更新完成。"
+info "代码准备就绪。"
 
 # =============================================================================
 # 步骤 4：创建 Python 虚拟环境
@@ -242,10 +258,15 @@ chmod 755 /opt/iching
 chmod 755 /opt/iching/data
 
 # 确保 nginx 能读取静态文件（www-data 或 nginx 用户）
-if [ "$OS" = "centos" ] || [ "$OS" = "rhel" ]; then
-    # CentOS 上 nginx 以 nginx 用户运行，需添加 www-data 到 nginx 组或调整权限
+# nginx 以 nginx 用户运行（alinux/CentOS），确保能读 www-data 的文件
+if [ "$OS" = "centos" ] || [ "$OS" = "rhel" ] || [ "$OS" = "alinux" ] || [ "$OS" = "alinux2" ] || [ "$OS" = "alinux3" ]; then
     usermod -aG www-data nginx 2>/dev/null || true
 fi
+# 允许 nginx 访问用户目录（SELinux 场景）
+chmod 755 /opt
+chmod 755 /opt/iching
+# SELinux: 允许 nginx 反向代理到后端
+setsebool -P httpd_can_network_connect 1 2>/dev/null || true
 
 info "权限设置完成。"
 
