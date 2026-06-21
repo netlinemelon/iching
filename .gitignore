@@ -21,10 +21,11 @@ data/iching.db
 .DS_Store
 Thumbs.db
 
-# Validation reports (generated)
+# Validation reports & audit files (generated/internal)
 data/validation_report.txt
 data/frontend_audit.md
 data/backend_audit.md
+data/opensource_plan.md
 data/validate_hexagrams.py
 
 # Redis dumps

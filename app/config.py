@@ -15,9 +15,14 @@ class Settings(BaseSettings):
 
     # AI 解卦配置（可选，不配置则使用规则回退）
     # 支持 Anthropic API 和兼容服务（如 DeepSeek）
-    anthropic_api_key: str = "REDACTED_API_KEY_PLACEHOLDER"
+    # 通过环境变量或 .env 文件设置，参考 .env.example
+    anthropic_api_key: str = ""
     anthropic_base_url: str = "https://api.deepseek.com/anthropic"
     anthropic_model: str = "deepseek-v4-pro"
+
+    # 服务器配置
+    host: str = "127.0.0.1"
+    port: int = 21882
 
     model_config = {"env_file": ".env"}
 
