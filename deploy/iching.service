@@ -1,0 +1,82 @@
+# =============================================================================
+# iching-ai.cn — systemd 服务单元
+# 应用：Python FastAPI + SQLite，监听 127.0.0.1:8088
+# 文件路径：/etc/systemd/system/iching.service
+# =============================================================================
+
+[Unit]
+# 服务描述
+Description=iching-ai.cn — I Ching Divination Web App
+# 在网络可达后启动
+After=network.target network-online.target
+# 明确要求网络就绪
+Wants=network-online.target
+
+[Service]
+# ---------- 运行用户（安全：禁止以 root 运行）----------
+# 使用 www-data 用户运行应用，降低安全风险
+User=www-data
+Group=www-data
+
+# ---------- 工作目录 ----------
+WorkingDirectory=/opt/iching
+
+# ---------- 启动命令 ----------
+# 使用虚拟环境中的 Python 解释器执行 run.py
+ExecStart=/opt/iching/venv/bin/python /opt/iching/run.py
+
+# ---------- 重启策略 ----------
+# 进程异常退出时总是自动重启
+Restart=always
+# 重启间隔
+RestartSec=5
+# 启动失败时的最大重启次数
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# ---------- 标准输出/错误重定向到 journald ----------
+# 可通过 journalctl -u iching 查看日志
+StandardOutput=journal
+StandardError=journal
+
+# ---------- 环境变量 ----------
+# 指定环境文件（.env 中的变量会注入到进程）
+EnvironmentFile=/opt/iching/.env
+
+# 设置 Python 环境变量
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/iching
+
+# ---------- 资源限制 ----------
+# 打开文件数限制（SQLite 和并发请求需要）
+LimitNOFILE=65536
+# 进程数限制
+LimitNPROC=4096
+
+# ---------- 安全加固 ----------
+# 禁止创建可执行内存页
+MemoryDenyWriteExecute=yes
+# 禁止获取特权
+NoNewPrivileges=yes
+# 禁止访问 /proc 中的其他进程
+ProtectProc=invisible
+# 创建私有 /tmp
+PrivateTmp=yes
+# 设备访问限制（禁止访问物理设备）
+PrivateDevices=yes
+# 将 /usr 挂载为只读
+ProtectSystem=strict
+# 允许写入的目录白名单
+ReadWritePaths=/opt/iching/data /opt/iching/.env /tmp
+
+# ---------- 进程类型 ----------
+# 后台运行
+Type=simple
+
+# 超时设置
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+[Install]
+# 开机自启（multi-user.target 是多用户运行级别）
+WantedBy=multi-user.target
