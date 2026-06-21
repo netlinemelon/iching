@@ -48,3 +48,14 @@ class DivinationRecord(Base):
             "is_favorite": self.is_favorite,
             "share_token": self.share_token,
         }
+
+
+class SyncCode(Base):
+    """同步码表 — 用于跨设备数据同步，支持多 worker。"""
+    __tablename__ = "sync_codes"
+
+    code = Column(String(8), primary_key=True)
+    records = Column(Text, nullable=False)  # JSON 序列化的记录数据
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    access_count = Column(Integer, default=0)
+    max_accesses = Column(Integer, default=3)

@@ -48,7 +48,11 @@
 
     /** 将记录数组写回 localStorage */
     function _saveAll(records) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        } catch (e) {
+            _warn('写入 localStorage 失败: ' + e.message);
+        }
     }
 
     /** 超过 MAX_ENTRIES 时按创建时间升序裁剪最旧记录 */
@@ -311,6 +315,9 @@
                 reader.onerror = function () {
                     reject(new Error('读取文件失败'));
                 };
+                reader.onabort = function () {
+                    reject(new Error('读取已取消'));
+                };
                 reader.readAsText(file);
             });
         },
@@ -346,6 +353,46 @@
                 newest: newest,
                 size: size,
             };
+        },
+
+        /**
+         * 检查 localStorage 是否可用。
+         * @returns {boolean}
+         */
+        isAvailable: function () {
+            try {
+                var testKey = '__iching_test__';
+                localStorage.setItem(testKey, '1');
+                localStorage.removeItem(testKey);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+
+        /**
+         * 保存或更新 AI 解卦结果到已有记录。
+         * 通过 share_token 匹配记录并更新 ai_interpretation 字段。
+         * @param {string} shareToken
+         * @param {string} text - AI 解读文本
+         * @returns {boolean} 是否成功更新
+         */
+        saveAIInterpretation: function (shareToken, text) {
+            if (!shareToken || !text) {
+                _warn('saveAIInterpretation: 参数不完整');
+                return false;
+            }
+            var records = _getAll();
+            for (var i = 0; i < records.length; i++) {
+                if (records[i].share_token === shareToken) {
+                    records[i].ai_interpretation = text;
+                    _saveAll(records);
+                    _log('已更新 AI 解卦结果: ' + shareToken);
+                    return true;
+                }
+            }
+            _warn('saveAIInterpretation: 未找到匹配的记录 ' + shareToken);
+            return false;
         },
 
         /**

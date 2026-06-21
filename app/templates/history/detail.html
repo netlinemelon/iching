@@ -186,7 +186,7 @@
       <section class="page-section">
         <div class="card" style="border: 2px solid var(--color-accent); background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-section) 100%);">
           <h3>🤖 AI 智能解卦</h3>
-          <div class="ai-result mt-md" style="line-height: 1.8;">{{ record.ai_interpretation | replace('\n', '<br>') | safe }}</div>
+          <div class="ai-result mt-md" style="line-height: 1.8; white-space: pre-wrap;">{{ record.ai_interpretation | replace('\n', '&#10;') }}</div>
         </div>
       </section>
       {% endif %}
@@ -332,8 +332,8 @@
 </div>
 
 <script>
-// 保存到浏览器本地存储（仅在非分享页面保存，避免分享页重复写入）
-if (window.IChingStorage && typeof shared !== 'undefined' && !shared) {
+// 保存到浏览器本地存储
+if (window.IChingStorage) {
     (function() {
         try {
             var saveData = {{ record | tojson | safe }};

@@ -20,6 +20,13 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     log(2, "lifespan: database tables created")
 
+    # 启动时：清理过期同步码
+    try:
+        from app.routes.api import init_sync_store
+        await init_sync_store()
+    except Exception as e:
+        log(3, "lifespan: sync store init failed", level="WARN", error=e)
+
     # 启动时：尝试初始化 Redis 连接（优雅降级，Redis 不可用不影响应用）
     from app.cache import get_redis
     try:

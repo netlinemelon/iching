@@ -981,6 +981,7 @@ textarea {
   .donate-float {
     bottom: 16px;
     right: 16px;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
   }
 }
 

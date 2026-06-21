@@ -42,6 +42,15 @@
             var data = await resp.json();
             this.result = data.interpretation;
 
+            // 保存 AI 解卦结果到浏览器本地存储
+            if (window.IChingStorage && window.IChingStorage.saveAIInterpretation) {
+                try {
+                    IChingStorage.saveAIInterpretation(token, data.interpretation);
+                } catch (e) {
+                    console.warn('[ai.js] 保存 AI 结果到本地失败:', e);
+                }
+            }
+
             // 将 Markdown 转为简单 HTML
             this.rendered = this._renderMarkdown(data.interpretation);
             this.state = 'done';

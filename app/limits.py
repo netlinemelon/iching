@@ -1,7 +1,13 @@
 """
 IP 速率限制模块 — IP-based rate limiting
 
-使用内存字典存储每日计数，每天零点自动重置。
+使用内存字典存储每日计数，每天零点 (UTC) 自动重置。
+
+注意：
+  在多 worker 部署下，每个 worker 有独立的计数器，
+  实际日限额 = DAILY_AI_LIMIT * num_workers。
+  对于精确限流，请使用 Redis 集中式计数（项目依赖已包含 redis）。
+  本实现适用于单 worker 或 sticky-session 反向代理场景。
 """
 import time
 from collections import defaultdict
@@ -16,8 +22,8 @@ _daily: dict = {"date": "", "total": 0, "ips": defaultdict(int)}
 
 
 def _get_today() -> str:
-    """返回今日日期字符串 YYYY-MM-DD"""
-    return time.strftime("%Y-%m-%d")
+    """返回今日 UTC 日期字符串 YYYY-MM-DD。"""
+    return time.strftime("%Y-%m-%d", time.gmtime())
 
 
 def _check_reset():
@@ -65,9 +71,12 @@ def get_usage(client_ip: str) -> dict:
 
 def get_client_ip(request) -> str:
     """从请求中提取客户端 IP。
-    优先检查 X-Forwarded-For (经过代理时)，fallback 到直接 IP。
+
+    安全策略：只信任 X-Real-IP 头（由反向代理设置），
+    不信任 X-Forwarded-For（可被客户端伪造，且值可能包含代理链）。
+    如果应用部署在反向代理后，请确保代理正确设置了 X-Real-IP。
     """
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
     return request.client.host if request.client else "127.0.0.1"

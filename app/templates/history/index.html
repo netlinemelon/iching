@@ -16,9 +16,9 @@
       📤 导入数据
       <input type="file" accept=".json" style="display:none" onchange="IChingStorage.importJSON(this.files[0]).then(function(r){ alert('导入了 ' + r.imported + ' 条记录'); location.reload(); }).catch(function(e){ alert('导入失败: ' + e.message); })">
     </label>
-    <button onclick="syncUpload()" class="btn btn-accent btn-sm">📱 同步到手机</button>
+    <button onclick="syncUpload(event)" class="btn btn-accent btn-sm">📱 同步到手机</button>
     <div style="display:flex; gap:4px; align-items:center;">
-      <input id="sync-code-input" type="text" placeholder="6位码" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="off">
+      <input id="sync-code-input" type="text" placeholder="8位码（如 kfyr3847）" maxlength="8" pattern="[a-z]{4}[0-9]{4}" autocomplete="off">
       <button onclick="syncDownload()" class="btn btn-primary btn-sm">同步</button>
     </div>
   </div>
@@ -98,7 +98,8 @@
 {% block extra_scripts %}
 <script>
 /* 同步相关函数，依赖 storage.js 中的 IChingSync */
-function syncUpload() {
+function syncUpload(event) {
+  event = event || window.event;
   var btn = event && event.target;
   var origText = '';
   if (btn) {
@@ -123,8 +124,9 @@ function syncUpload() {
     });
 }
 function syncDownload() {
-  var code = document.getElementById('sync-code-input').value;
-  if (!code) { alert('请输入6位同步码'); return; }
+  var code = document.getElementById('sync-code-input').value.trim();
+  if (!code) { alert('请输入8位同步码'); return; }
+  if (!/^[a-z]{4}\d{4}$/.test(code)) { alert('同步码格式错误，应为4位小写字母+4位数字（如 kfyr3847）'); return; }
   IChingSync.downloadFromSync(code)
     .then(function (result) {
       alert('同步成功，导入了 ' + result.imported + ' 条记录');

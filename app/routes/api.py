@@ -4,7 +4,10 @@ REST API 路由 — JSON API Routes
 提供完整的 RESTful API，用于前端 AJAX 调用和第三方集成。
 """
 
+import json
 import random
+import re
+import time as time_module
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -30,7 +33,7 @@ from app.models.hexagram_data import (
     search_hexagrams,
 )
 from app.debug import log
-from app.models.divination_record import DivinationRecord
+from app.models.divination_record import DivinationRecord, SyncCode
 from app.models.schemas import DivinationResponse
 
 router = APIRouter()
@@ -538,51 +541,91 @@ async def api_ai_limits(request: Request):
 
 # ─── 同步码 ──────────────────────────────────────────────
 
-_sync_store: dict[str, dict] = {}
-"""内存同步码存储。
-   key = 6 位数字码, value = {"records": [...], "expires_at": datetime}
-   读取时检查过期，过期条目自动删除。24 小时后过期。
-"""
+# 同步端点速率限制 (内存, 单 worker 有效)
+_sync_rate_limits: dict[str, list[float]] = {}
 
 
-def _clean_expired_sync_codes():
-    """清理过期的同步码。"""
-    now = datetime.utcnow()
-    expired = [k for k, v in _sync_store.items() if v["expires_at"] < now]
-    for k in expired:
-        del _sync_store[k]
-    if expired:
-        log(355, f"sync: cleaned {len(expired)} expired codes")
+def _check_sync_rate_limit(ip: str, max_requests: int = 10, window: int = 3600) -> bool:
+    """检查同步端点 IP 速率限制。每 IP 每窗口最多 max_requests 次。"""
+    now = time_module.time()
+    if ip not in _sync_rate_limits:
+        _sync_rate_limits[ip] = []
+    _sync_rate_limits[ip] = [t for t in _sync_rate_limits[ip] if now - t < window]
+    if len(_sync_rate_limits[ip]) >= max_requests:
+        return False
+    _sync_rate_limits[ip].append(now)
+    return True
+
+
+async def init_sync_store():
+    """启动时清理过期的同步码。"""
+    try:
+        async with async_session() as session:
+            import time as _t
+            cutoff = datetime.utcnow() - timedelta(seconds=settings.sync_code_ttl)
+            result = await session.execute(
+                select(SyncCode).where(SyncCode.created_at < cutoff)
+            )
+            expired = result.scalars().all()
+            for entry in expired:
+                await session.delete(entry)
+            await session.commit()
+            if expired:
+                log(356, f"sync: cleaned {len(expired)} expired codes on startup")
+    except Exception as e:
+        log(357, "sync: startup cleanup failed", level="WARN", error=e)
 
 
 @router.post("/sync/create")
 async def sync_create(request: Request):
-    """上传占卜记录，返回 6 位数字同步码。
+    """上传占卜记录，返回 8 位字母数字同步码（4 小写字母 + 4 数字）。
 
     请求体: 包含 records 数组的 JSON 对象（与导出格式兼容）
-    响应: {code: "123456", expires_at: "2026-01-01T00:00:00"}
+    响应: {code: "kfyr3847", expires_at: "2026-01-01T00:00:00"}
+    速率限制: 每 IP 每小时 10 次
     """
-    _clean_expired_sync_codes()
+    from app.limits import get_client_ip
+
+    client_ip = get_client_ip(request)
+    if not _check_sync_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="请求过于频繁，请稍后再试")
 
     body = await request.json()
     records = body.get("records", [])
     if not isinstance(records, list):
         raise HTTPException(status_code=400, detail="请求体必须包含 records 数组")
 
-    # 生成 6 位不重复数字码
+    # 限制单次上传记录数
+    if len(records) > 1000:
+        raise HTTPException(status_code=400, detail="单次同步最多 1000 条记录")
+
+    # 生成 8 位同步码（4 随机小写字母 + 4 随机数字）
     import random as rnd
+    import string
     for _ in range(100):
-        code = f"{rnd.randint(100000, 999999)}"
-        if code not in _sync_store:
-            break
+        letters = ''.join(rnd.choices(string.ascii_lowercase, k=4))
+        digits = ''.join(rnd.choices(string.digits, k=4))
+        code = letters + digits
+        async with async_session() as session:
+            existing = await session.execute(
+                select(SyncCode).where(SyncCode.code == code)
+            )
+            if not existing.scalar_one_or_none():
+                break
     else:
         raise HTTPException(status_code=500, detail="无法生成唯一同步码，请重试")
 
-    expires_at = datetime.utcnow() + timedelta(hours=24)
-    _sync_store[code] = {
-        "records": records,
-        "expires_at": expires_at,
-    }
+    expires_at = datetime.utcnow() + timedelta(seconds=settings.sync_code_ttl)
+    sync_entry = SyncCode(
+        code=code,
+        records=json.dumps(records, ensure_ascii=False),
+        created_at=datetime.utcnow(),
+        access_count=0,
+        max_accesses=3,
+    )
+    async with async_session() as session:
+        session.add(sync_entry)
+        await session.commit()
 
     log(353, f"sync: created code={code} records={len(records)}")
     return {
@@ -592,18 +635,52 @@ async def sync_create(request: Request):
 
 
 @router.get("/sync/{code}")
-async def sync_download(code: str):
-    """通过 6 位同步码下载占卜记录。"""
-    _clean_expired_sync_codes()
+async def sync_download(code: str, request: Request):
+    """通过 8 位同步码下载占卜记录（最多下载 3 次后自动删除）。"""
+    from app.limits import get_client_ip
 
-    entry = _sync_store.get(code)
-    if entry is None:
-        log(354, f"sync: code={code} NOT FOUND", level="WARN")
+    client_ip = get_client_ip(request)
+    if not _check_sync_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="请求过于频繁，请稍后再试")
+
+    # 验证 code 格式
+    if not re.match(r'^[a-z]{4}\d{4}$', code):
+        log(354, f"sync: code={code} invalid format", level="WARN")
         raise HTTPException(status_code=404, detail="同步码无效或已过期")
 
-    log(353, f"sync: downloaded code={code} records={len(entry['records'])}")
+    async with async_session() as session:
+        result = await session.execute(
+            select(SyncCode).where(SyncCode.code == code)
+        )
+        entry = result.scalar_one_or_none()
+
+        if entry is None:
+            log(354, f"sync: code={code} NOT FOUND", level="WARN")
+            raise HTTPException(status_code=404, detail="同步码无效或已过期")
+
+        # 检查过期
+        expires_at = entry.created_at + timedelta(seconds=settings.sync_code_ttl)
+        if datetime.utcnow() > expires_at:
+            await session.delete(entry)
+            await session.commit()
+            log(354, f"sync: code={code} EXPIRED", level="WARN")
+            raise HTTPException(status_code=404, detail="同步码已过期")
+
+        # 增加访问计数
+        entry.access_count += 1
+        records_data = json.loads(entry.records)
+
+        # 达到最大访问次数后自动删除
+        if entry.access_count >= entry.max_accesses:
+            await session.delete(entry)
+            log(355, f"sync: code={code} auto-deleted after {entry.access_count} accesses")
+        else:
+            session.add(entry)
+        await session.commit()
+
+    log(353, f"sync: downloaded code={code} records={len(records_data)}")
     return {
         "code": code,
-        "records": entry["records"],
-        "expires_at": entry["expires_at"].isoformat(),
+        "records": records_data,
+        "expires_at": expires_at.isoformat(),
     }
