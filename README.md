@@ -29,7 +29,7 @@ git clone https://github.com/netlinemelon/iching.git
 cd iching
 pip install -r requirements.txt
 cp .env.example .env          # 编辑 .env 填入 API Key（可选）
-python run.py                  # 默认 http://localhost:21882
+python run.py                  # 默认 http://localhost:8088
 ```
 
 Windows 用户可直接双击 `start.bat`。
@@ -43,7 +43,7 @@ ANTHROPIC_API_KEY=sk-your-key       # DeepSeek API Key
 ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
 ANTHROPIC_MODEL=deepseek-v4-pro
 HOST=127.0.0.1
-PORT=21882
+PORT=8088
 DEBUG=true
 ```
 

@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # 服务器配置
     host: str = "127.0.0.1"
-    port: int = 21882
+    port: int = 8088
 
     model_config = {"env_file": ".env"}
 

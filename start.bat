@@ -23,7 +23,7 @@ echo [INFO] Installing dependencies...
 pip install -r requirements.txt -q 2>nul
 
 :: 启动服务
-set PORT=%PORT:-21882%
+set PORT=%PORT:-8088%
 set HOST=%HOST:-127.0.0.1%
 
 echo.
