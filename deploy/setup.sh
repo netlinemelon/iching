@@ -202,42 +202,38 @@ info "=========================================="
 info "步骤 7/10：部署 nginx 配置"
 info "=========================================="
 
-# 将 deploy 目录中的配置文件复制到 nginx 目录
+# 先用 HTTP-only 配置部署（SSL 证书尚不存在）
 case $OS in
     ubuntu|debian)
-        # Ubuntu/Debian 使用 sites-available + sites-enabled
         NGINX_CONF_DIR="/etc/nginx/sites-available"
         NGINX_ENABLED_DIR="/etc/nginx/sites-enabled"
-
-        cp $PROJECT_DIR/deploy/iching-nginx.conf "$NGINX_CONF_DIR/iching-ai.cn"
-
-        # 创建软链接启用站点
+        cp $PROJECT_DIR/deploy/iching-http.conf "$NGINX_CONF_DIR/iching-ai.cn"
         ln -sf "$NGINX_CONF_DIR/iching-ai.cn" "$NGINX_ENABLED_DIR/"
-
-        # 移除默认站点
         rm -f "$NGINX_ENABLED_DIR/default"
         ;;
     centos|rhel|fedora|alinux|alinux2|alinux3)
-        # CentOS/RHEL 使用 conf.d 目录
         NGINX_CONF_DIR="/etc/nginx/conf.d"
-
-        cp $PROJECT_DIR/deploy/iching-nginx.conf "$NGINX_CONF_DIR/iching-ai.cn.conf"
-
-        # CentOS 默认关闭了 443，需要确认 SELinux
-        if command -v getenforce &>/dev/null && [ "$(getenforce)" = "Enforcing" ]; then
-            warn "SELinux 处于 Enforcing 模式，可能需要放行 443 端口："
-            echo "  semanage port -a -t http_port_t -p tcp 443"
-        fi
+        cp $PROJECT_DIR/deploy/iching-http.conf "$NGINX_CONF_DIR/iching-ai.cn.conf"
         ;;
 esac
 
-# 测试 nginx 配置
 info "测试 nginx 配置..."
-if nginx -t; then
-    info "nginx 配置测试通过。"
+nginx -t || { error "nginx 配置测试失败"; exit 1; }
+info "nginx 配置测试通过。"
+
+# 启动 nginx（HTTP only，certbot 需要 80 端口验证域名）
+systemctl enable --now nginx
+info "nginx 已启动（HTTP 模式）。"
+
+# 申请 SSL 证书（certbot 自动修改 nginx 配置加入 HTTPS）
+info "正在申请 SSL 证书..."
+if certbot --nginx --non-interactive --agree-tos --email admin@iching-ai.cn \
+    -d iching-ai.cn -d www.iching-ai.cn 2>&1; then
+    info "SSL 证书申请成功，nginx 已自动升级为 HTTPS。"
 else
-    error "nginx 配置测试失败，请检查配置文件。"
-    exit 1
+    warn "SSL 证书申请失败。请稍后手动运行："
+    warn "  certbot --nginx -d iching-ai.cn -d www.iching-ai.cn"
+    warn "目前 HTTP 模式可以正常使用。"
 fi
 
 # =============================================================================
@@ -290,12 +286,10 @@ systemctl enable --now iching
 info "iching 服务状态："
 systemctl status iching --no-pager -l | head -20
 
-# 启动 nginx
-info "正在启动 nginx..."
-systemctl enable --now nginx
+# 重载 nginx（certbot 可能已修改配置）
 systemctl reload nginx 2>/dev/null || true
-info "nginx 服务状态："
-systemctl status nginx --no-pager -l | head -10
+info "nginx 状态："
+systemctl status nginx --no-pager -l | head -5
 
 # =============================================================================
 # 完成
@@ -325,12 +319,11 @@ echo -e "  5. ${YELLOW}编辑 .env 配置${NC}（如需修改）："
 echo -e "     nano $PROJECT_DIR/.env && systemctl restart iching"
 echo ""
 
-# 检查是否已申请 SSL 证书
+# SSL 证书状态
 if [ -f "/etc/letsencrypt/live/iching-ai.cn/fullchain.pem" ]; then
-    info "检测到 SSL 证书已存在，HTTPS 应可正常访问。"
+    info "SSL 证书已就绪，HTTPS 可正常访问。"
 else
-    warn "未检测到 SSL 证书，请尽快运行 certbot 申请证书！"
-    warn "   certbot --nginx -d iching-ai.cn -d www.iching-ai.cn"
+    warn "SSL 证书未申请成功，HTTP 模式仍可用。"
 fi
 
 # 检查端口监听
