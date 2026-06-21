@@ -17,6 +17,7 @@ class DivinationRecord(Base):
     __tablename__ = "divination_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    client_id = Column(String(64), nullable=False, default="", index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     method = Column(String(50), nullable=False, default="coin")
     original_binary = Column(String(6), nullable=False)
@@ -55,6 +56,7 @@ class SyncCode(Base):
     __tablename__ = "sync_codes"
 
     code = Column(String(8), primary_key=True)
+    client_id = Column(String(64), nullable=False, default="", index=True)
     records = Column(Text, nullable=False)  # JSON 序列化的记录数据
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     access_count = Column(Integer, default=0)

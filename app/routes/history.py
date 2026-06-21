@@ -29,13 +29,16 @@ _RECORDS_PER_PAGE = 20
 
 
 async def _get_paginated_records(page: int = 1, per_page: int = _RECORDS_PER_PAGE,
-                                 favorite_only: bool = False):
+                                 favorite_only: bool = False,
+                                 client_id: str = ""):
     """从数据库查询分页的历史记录。"""
     async with async_session() as session:
         query = select(DivinationRecord).order_by(DivinationRecord.created_at.desc())
 
         if favorite_only:
             query = query.where(DivinationRecord.is_favorite == True)
+
+        query = query.where(DivinationRecord.client_id == client_id)
 
         # 总记录数
         count_query = select(func.count()).select_from(query.subquery())
@@ -75,7 +78,6 @@ def _build_record_summary(rec: DivinationRecord) -> dict:
         "notes": rec.notes,
         "is_favorite": rec.is_favorite,
         "share_token": rec.share_token,
-        "question": rec.question or "",
     }
 
 
@@ -92,6 +94,7 @@ async def history_list(
     records, total, total_pages, current_page = await _get_paginated_records(
         page=page,
         favorite_only=favorite_only,
+        client_id=request.state.client_id,
     )
 
     summaries = [_build_record_summary(r) for r in records]
@@ -144,7 +147,10 @@ async def history_detail(
     # 从数据库查询
     async with async_session() as session:
         result = await session.execute(
-            select(DivinationRecord).where(DivinationRecord.id == record_id)
+            select(DivinationRecord).where(
+                DivinationRecord.id == record_id,
+                DivinationRecord.client_id == request.state.client_id,
+            )
         )
         record = result.scalar_one_or_none()
 
@@ -162,8 +168,6 @@ async def history_detail(
         "notes": record.notes,
         "is_favorite": record.is_favorite,
         "share_token": record.share_token,
-        "question": record.question or "",
-        "ai_interpretation": record.ai_interpretation,
     })
 
     context = {
@@ -182,7 +186,10 @@ async def history_toggle_favorite(
     """切换收藏状态。"""
     async with async_session() as session:
         result = await session.execute(
-            select(DivinationRecord).where(DivinationRecord.id == record_id)
+            select(DivinationRecord).where(
+                DivinationRecord.id == record_id,
+                DivinationRecord.client_id == request.state.client_id,
+            )
         )
         record = result.scalar_one_or_none()
         if record is None:
@@ -203,7 +210,10 @@ async def history_delete(
     """删除占卜记录。"""
     async with async_session() as session:
         result = await session.execute(
-            select(DivinationRecord).where(DivinationRecord.id == record_id)
+            select(DivinationRecord).where(
+                DivinationRecord.id == record_id,
+                DivinationRecord.client_id == request.state.client_id,
+            )
         )
         record = result.scalar_one_or_none()
         if record is None:

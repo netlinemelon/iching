@@ -7,8 +7,43 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.database import engine, async_session, Base
 from app.debug import log
+from sqlalchemy import text
 
 templates = Jinja2Templates(directory=str(settings.template_dir))
+
+
+async def _migrate_db():
+    """迁移现有数据库：为 divination_records 添加 client_id 列并填充默认值。"""
+    try:
+        async with engine.begin() as conn:
+            # 检查 client_id 列是否存在
+            result = await conn.execute(
+                text("PRAGMA table_info(divination_records)")
+            )
+            columns = {row[1] for row in result.fetchall()}
+            if "client_id" not in columns:
+                log(12, "migrate: adding client_id column to divination_records")
+                await conn.execute(
+                    text("ALTER TABLE divination_records ADD COLUMN client_id TEXT DEFAULT ''")
+                )
+                await conn.execute(
+                    text("UPDATE divination_records SET client_id = hex(randomblob(16)) WHERE client_id = '' OR client_id IS NULL")
+                )
+                log(13, "migrate: client_id column added and existing rows updated")
+
+            # 同步检查 sync_codes 的 client_id 列
+            result = await conn.execute(
+                text("PRAGMA table_info(sync_codes)")
+            )
+            columns = {row[1] for row in result.fetchall()}
+            if "client_id" not in columns:
+                log(14, "migrate: adding client_id column to sync_codes")
+                await conn.execute(
+                    text("ALTER TABLE sync_codes ADD COLUMN client_id TEXT DEFAULT ''")
+                )
+                log(15, "migrate: sync_codes client_id column added")
+    except Exception as e:
+        log(16, "migrate: migration failed", level="WARN", error=e)
 
 
 @asynccontextmanager
@@ -19,6 +54,10 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     log(2, "lifespan: database tables created")
+
+    # 启动时：迁移现有数据库
+    await _migrate_db()
+    log(2, "lifespan: database migration completed")
 
     # 启动时：清理过期同步码
     try:
@@ -52,6 +91,33 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 log(10, f"app: FastAPI app created, title='{settings.app_name}'")
+
+
+# 匿名身份中间件 — 自动分配 client_id (HttpOnly Cookie)
+import secrets
+from starlette.responses import Response
+
+COOKIE_NAME = "iching_cid"
+COOKIE_MAX_AGE = 365 * 86400  # 1 年
+
+@app.middleware("http")
+async def client_id_middleware(request: Request, call_next):
+    cid = request.cookies.get(COOKIE_NAME)
+    if not cid:
+        cid = secrets.token_urlsafe(32)
+    request.state.client_id = cid
+
+    response: Response = await call_next(request)
+
+    # 首次访问或续期：设置 cookie
+    if COOKIE_NAME not in request.cookies:
+        response.set_cookie(
+            key=COOKIE_NAME, value=cid,
+            max_age=COOKIE_MAX_AGE,
+            httponly=True, secure=not settings.debug,
+            samesite="lax",
+        )
+    return response
 
 
 # 全局熔断中间件

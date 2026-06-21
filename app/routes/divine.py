@@ -35,12 +35,13 @@ router = APIRouter()
 
 async def _save_to_db(hexagram: Hexagram, changed: Hexagram | None,
                       share_token: str, method: str = "coin",
-                      question: str = "") -> int:
+                      question: str = "", client_id: str = "") -> int:
     """将占卜结果保存到数据库。"""
     log(300, f"_save_to_db: method={method} bin={hexagram.binary}")
     try:
         async with async_session() as session:
             record = DivinationRecord(
+                client_id=client_id,
                 method=method,
                 original_binary=hexagram.binary,
                 original_values=hexagram.line_values,
@@ -170,7 +171,8 @@ async def coin_toss(
 
     # 保存到数据库
     record_id = await _save_to_db(hexagram, changed, share_token,
-                                  method="coin", question=question or "")
+                                  method="coin", question=question or "",
+                                  client_id=request.state.client_id)
 
     result["id"] = record_id
     result["share_token"] = share_token
@@ -204,7 +206,10 @@ async def divination_result(
         log(321, f"divination_result: cache miss, checking DB token={token[:8]}...")
         async with async_session() as session:
             db_result = await session.execute(
-                select(DivinationRecord).where(DivinationRecord.share_token == token)
+                select(DivinationRecord).where(
+                    DivinationRecord.share_token == token,
+                    DivinationRecord.client_id == request.state.client_id,
+                )
             )
             record = db_result.scalar_one_or_none()
 
@@ -264,7 +269,8 @@ async def yarrow_cast(request: Request, seed: Optional[int] = Form(default=None)
         raise HTTPException(status_code=500, detail=str(e))
 
     share_token = DivinationRecord.generate_share_token()
-    record_id = await _save_to_db(hexagram, changed, share_token, method="yarrow", question=question or "")
+    record_id = await _save_to_db(hexagram, changed, share_token, method="yarrow", question=question or "",
+                                  client_id=request.state.client_id)
 
     result["id"] = record_id
     result["share_token"] = share_token
@@ -306,7 +312,8 @@ async def time_cast(request: Request,
         raise HTTPException(status_code=500, detail=str(e))
 
     share_token = DivinationRecord.generate_share_token()
-    record_id = await _save_to_db(hexagram, changed, share_token, method="time", question=question or "")
+    record_id = await _save_to_db(hexagram, changed, share_token, method="time", question=question or "",
+                                  client_id=request.state.client_id)
 
     result["id"] = record_id
     result["share_token"] = share_token
@@ -353,7 +360,8 @@ async def number_cast(
         raise HTTPException(status_code=500, detail=str(e))
 
     share_token = DivinationRecord.generate_share_token()
-    record_id = await _save_to_db(hexagram, changed, share_token, method="number", question=question or "")
+    record_id = await _save_to_db(hexagram, changed, share_token, method="number", question=question or "",
+                                  client_id=request.state.client_id)
 
     result["id"] = record_id
     result["share_token"] = share_token
@@ -405,7 +413,8 @@ async def plum_blossom_cast(
         raise HTTPException(status_code=500, detail=str(e))
 
     share_token = DivinationRecord.generate_share_token()
-    record_id = await _save_to_db(hexagram, changed, share_token, method="plum-blossom", question=question or "")
+    record_id = await _save_to_db(hexagram, changed, share_token, method="plum-blossom", question=question or "",
+                                  client_id=request.state.client_id)
 
     result["id"] = record_id
     result["share_token"] = share_token

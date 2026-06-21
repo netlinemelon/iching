@@ -49,7 +49,8 @@ async def api_health():
 
 # ─── 占卜 ──────────────────────────────────────────────
 
-async def _perform_and_cache(hexagram: Hexagram, method: str = "coin") -> dict:
+async def _perform_and_cache(hexagram: Hexagram, method: str = "coin",
+                             client_id: str = "", question: str = "") -> dict:
     """执行占卜：构建结果、保存数据库、写入缓存。"""
     log(330, f"_perform_and_cache: method={method} bin={hexagram.binary}")
     changed = None
@@ -59,16 +60,17 @@ async def _perform_and_cache(hexagram: Hexagram, method: str = "coin") -> dict:
 
     result = _build_api_result(hexagram, method=method)
 
-    # 保存到数据库
     share_token = DivinationRecord.generate_share_token()
     async with async_session() as session:
         record = DivinationRecord(
+            client_id=client_id,
             method=method,
             original_binary=hexagram.binary,
             original_values=hexagram.line_values,
             changed_binary=changed.binary if changed else None,
             changing_positions=hexagram.changing_positions,
             share_token=share_token,
+            question=question,
         )
         session.add(record)
         await session.commit()
@@ -86,6 +88,7 @@ async def _perform_and_cache(hexagram: Hexagram, method: str = "coin") -> dict:
 
 @router.post("/divine/coin", response_model=DivinationResponse)
 async def api_coin_divination(
+    request: Request,
     seed: Optional[int] = Query(default=None),
     values: Optional[str] = Query(default=None),
 ):
@@ -113,11 +116,13 @@ async def api_coin_divination(
         except Exception:
             raise HTTPException(status_code=500, detail="占卜失败，请稍后重试。")
 
-    return await _perform_and_cache(hexagram, method="coin")
+    return await _perform_and_cache(hexagram, method="coin",
+        client_id=request.state.client_id)
 
 
 @router.post("/divine/yarrow", response_model=DivinationResponse)
 async def api_yarrow_divination(
+    request: Request,
     seed: Optional[int] = Query(default=None),
 ):
     """执行蓍草法占卜。"""
@@ -126,21 +131,26 @@ async def api_yarrow_divination(
         hexagram = cast_yarrow_hexagram(rng)
     except Exception:
         raise HTTPException(status_code=500, detail="占卜失败，请稍后重试。")
-    return await _perform_and_cache(hexagram, method="yarrow")
+    return await _perform_and_cache(hexagram, method="yarrow",
+        client_id=request.state.client_id)
 
 
 @router.post("/divine/time", response_model=DivinationResponse)
-async def api_time_divination():
+async def api_time_divination(
+    request: Request,
+):
     """执行时间卦占卜。"""
     try:
         hexagram = cast_time_hexagram()
     except Exception:
         raise HTTPException(status_code=500, detail="占卜失败，请稍后重试。")
-    return await _perform_and_cache(hexagram, method="time")
+    return await _perform_and_cache(hexagram, method="time",
+        client_id=request.state.client_id)
 
 
 @router.post("/divine/number", response_model=DivinationResponse)
 async def api_number_divination(
+    request: Request,
     n1: int = Query(..., ge=1, description="第一个数字（上卦）"),
     n2: int = Query(..., ge=1, description="第二个数字（下卦）"),
     n3: int = Query(..., ge=1, description="第三个数字（动爻）"),
@@ -150,11 +160,13 @@ async def api_number_divination(
         hexagram = cast_number_hexagram(n1, n2, n3)
     except Exception:
         raise HTTPException(status_code=500, detail="占卜失败，请稍后重试。")
-    return await _perform_and_cache(hexagram, method="number")
+    return await _perform_and_cache(hexagram, method="number",
+        client_id=request.state.client_id)
 
 
 @router.post("/divine/plum-blossom", response_model=DivinationResponse)
 async def api_plum_blossom_divination(
+    request: Request,
     upper_trigram: str = Query(..., description="上卦"),
     lower_trigram: str = Query(..., description="下卦"),
     changing_line: Optional[int] = Query(default=None, description="动爻位置（可选）"),
@@ -166,7 +178,8 @@ async def api_plum_blossom_divination(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="占卜失败，请稍后重试。")
-    return await _perform_and_cache(hexagram, method="plum-blossom")
+    return await _perform_and_cache(hexagram, method="plum-blossom",
+        client_id=request.state.client_id)
 
 
 def _build_api_result(hexagram: Hexagram, method: str = "coin") -> dict:
@@ -285,6 +298,7 @@ async def api_list_trigrams():
 
 @router.get("/history")
 async def api_list_history(
+    request: Request,
     page: int = Query(default=1, ge=1, description="页码"),
     per_page: int = Query(default=20, ge=1, le=100, description="每页条数"),
     favorite_only: bool = Query(default=False, description="仅显示收藏"),
@@ -304,6 +318,8 @@ async def api_list_history(
 
         if favorite_only:
             query = query.where(DivinationRecord.is_favorite == True)
+
+        query = query.where(DivinationRecord.client_id == request.state.client_id)
 
         # 计数
         count_query = select(func.count()).select_from(query.subquery())
@@ -347,10 +363,13 @@ async def api_list_history(
 
 
 @router.get("/history/export")
-async def api_export_history():
+async def api_export_history(
+    request: Request,
+):
     """导出全部占卜历史记录为 JSON。"""
     async with async_session() as session:
         query = select(DivinationRecord).order_by(DivinationRecord.created_at.desc())
+        query = query.where(DivinationRecord.client_id == request.state.client_id)
         result = await session.execute(query)
         records = result.scalars().all()
 
@@ -365,7 +384,6 @@ async def api_export_history():
             "id": rec.id,
             "created_at": rec.created_at.isoformat() if rec.created_at else "",
             "method": rec.method,
-            "question": rec.question or "",
             "original_binary": rec.original_binary,
             "original_values": rec.original_values,
             "original_name_cn": original_data["name"]["cn"] if original_data else "未知",
@@ -388,6 +406,7 @@ async def api_export_history():
 
 @router.post("/history/{record_id}/favorite")
 async def api_toggle_favorite(
+    request: Request,
     record_id: int = Path(..., description="记录ID"),
 ):
     """切换收藏状态。
@@ -400,7 +419,10 @@ async def api_toggle_favorite(
     """
     async with async_session() as session:
         result = await session.execute(
-            select(DivinationRecord).where(DivinationRecord.id == record_id)
+            select(DivinationRecord).where(
+                DivinationRecord.id == record_id,
+                DivinationRecord.client_id == request.state.client_id,
+            )
         )
         record = result.scalar_one_or_none()
         if record is None:
@@ -481,7 +503,10 @@ async def api_ai_interpret(
         # 从数据库回查
         async with async_session() as session:
             db_result = await session.execute(
-                select(DivinationRecord).where(DivinationRecord.share_token == token)
+                select(DivinationRecord).where(
+                    DivinationRecord.share_token == token,
+                    DivinationRecord.client_id == request.state.client_id,
+                )
             )
             record = db_result.scalar_one_or_none()
 
@@ -518,7 +543,10 @@ async def api_ai_interpret(
     try:
         async with async_session() as session:
             db_result = await session.execute(
-                select(DivinationRecord).where(DivinationRecord.share_token == token)
+                select(DivinationRecord).where(
+                    DivinationRecord.share_token == token,
+                    DivinationRecord.client_id == request.state.client_id,
+                )
             )
             record = db_result.scalar_one_or_none()
             if record:
@@ -618,6 +646,7 @@ async def sync_create(request: Request):
     expires_at = datetime.utcnow() + timedelta(seconds=settings.sync_code_ttl)
     sync_entry = SyncCode(
         code=code,
+        client_id=request.state.client_id,
         records=json.dumps(records, ensure_ascii=False),
         created_at=datetime.utcnow(),
         access_count=0,
