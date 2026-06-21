@@ -9,6 +9,21 @@
     共 {{ total }} 条记录
   </p>
 
+  <!-- 数据管理工具 -->
+  <div class="data-tools" style="margin-bottom: 16px;">
+    <button onclick="IChingStorage.exportJSON()" class="btn btn-secondary btn-sm">📥 导出数据</button>
+    <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+      📤 导入数据
+      <input type="file" accept=".json" style="display:none" onchange="IChingStorage.importJSON(this.files[0]).then(function(r){ alert('导入了 ' + r.imported + ' 条记录'); location.reload(); }).catch(function(e){ alert('导入失败: ' + e.message); })">
+    </label>
+    <button onclick="syncUpload()" class="btn btn-accent btn-sm">📱 同步到手机</button>
+    <div style="display:flex; gap:4px; align-items:center;">
+      <input id="sync-code-input" type="text" placeholder="6位码" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="off">
+      <button onclick="syncDownload()" class="btn btn-primary btn-sm">同步</button>
+    </div>
+  </div>
+  <div id="sync-result" style="display:none;" class="sync-result-card"></div>
+
   <!-- 筛选栏 -->
   <div class="filter-bar">
     <a href="/history/" class="btn {% if not favorite_only %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">全部</a>
@@ -78,4 +93,46 @@
   </div>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* 同步相关函数，依赖 storage.js 中的 IChingSync */
+function syncUpload() {
+  var btn = event && event.target;
+  var origText = '';
+  if (btn) {
+    origText = btn.textContent;
+    btn.textContent = '上传中...';
+    btn.disabled = true;
+  }
+  IChingSync.uploadForSync()
+    .then(function (result) {
+      var el = document.getElementById('sync-result');
+      el.style.display = 'block';
+      el.innerHTML = '<strong>同步码：' + result.code + '</strong><br>有效期至 ' + result.expires_at + '<br>在另一台设备输入此码即可同步';
+    })
+    .catch(function (err) {
+      alert('同步上传失败: ' + err.message);
+    })
+    .finally(function () {
+      if (btn) {
+        btn.textContent = origText;
+        btn.disabled = false;
+      }
+    });
+}
+function syncDownload() {
+  var code = document.getElementById('sync-code-input').value;
+  if (!code) { alert('请输入6位同步码'); return; }
+  IChingSync.downloadFromSync(code)
+    .then(function (result) {
+      alert('同步成功，导入了 ' + result.imported + ' 条记录');
+      location.reload();
+    })
+    .catch(function (err) {
+      alert('同步失败: ' + err.message);
+    });
+}
+</script>
 {% endblock %}

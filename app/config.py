@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     anthropic_base_url: str = "https://api.deepseek.com/anthropic"
     anthropic_model: str = "deepseek-v4-pro"
 
+    # 速率限制配置
+    daily_ai_limit: int = 10_000
+    # 同步码有效期（秒）
+    sync_code_ttl: int = 86400  # 24 hours
+
     # 服务器配置
     host: str = "127.0.0.1"
     port: int = 8088

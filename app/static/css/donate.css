@@ -1,0 +1,117 @@
+/* ===== 赞助悬浮按钮 — Donate Floating Button ===== */
+
+.donate-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+}
+
+.donate-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  line-height: 1;
+}
+
+.donate-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.donate-btn:active {
+  transform: scale(0.95);
+}
+
+.donate-card {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  width: 280px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-md);
+}
+
+.donate-card h4 {
+  margin-bottom: var(--space-xs);
+  text-align: center;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.donate-card .text-muted {
+  text-align: center;
+  font-size: var(--font-tiny);
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.qr-item {
+  text-align: center;
+}
+
+.qr-item img {
+  width: 100%;
+  max-width: 120px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-light);
+}
+
+.qr-item span {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: var(--font-small);
+  color: var(--color-text-secondary);
+}
+
+.donate-card .text-tiny {
+  text-align: center;
+  margin-top: var(--space-sm);
+  margin-bottom: 0;
+  font-size: 0.65rem;
+}
+
+/* 移动端适配 */
+@media (max-width: 480px) {
+  .donate-float {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .donate-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+  }
+
+  .donate-card {
+    width: 240px;
+    right: -10px;
+    bottom: 52px;
+  }
+
+  .qr-item img {
+    max-width: 100px;
+  }
+}

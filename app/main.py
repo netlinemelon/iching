@@ -11,40 +11,14 @@ from app.debug import log
 templates = Jinja2Templates(directory=str(settings.template_dir))
 
 
-from sqlalchemy import text
-
-
-def _migrate_db(conn):
-    """数据库迁移：为新增加的列执行 ALTER TABLE。"""
-    log(11, "_migrate_db: start checking columns")
-    result = conn.execute(text("PRAGMA table_info(divination_records)"))
-    cols = {row[1] for row in result.fetchall()}
-    if "question" not in cols:
-        log(12, "_migrate_db: adding question column via ALTER TABLE")
-        conn.execute(
-            text("ALTER TABLE divination_records ADD COLUMN question TEXT DEFAULT ''")
-        )
-    if "ai_interpretation" not in cols:
-        log(14, "_migrate_db: adding ai_interpretation column via ALTER TABLE")
-        conn.execute(
-            text("ALTER TABLE divination_records ADD COLUMN ai_interpretation TEXT")
-        )
-    log(13, "_migrate_db: completed")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log(1, "lifespan: startup starting")
 
-    # 启动时：创建数据库表
+    # 启动时：创建数据库表（用于占卜记录持久化和分享功能）
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     log(2, "lifespan: database tables created")
-
-    # 迁移：为已存在的数据库添加 question 列
-    async with engine.begin() as conn:
-        await conn.run_sync(_migrate_db)
-    log(3, "lifespan: migration check completed")
 
     # 启动时：尝试初始化 Redis 连接（优雅降级，Redis 不可用不影响应用）
     from app.cache import get_redis

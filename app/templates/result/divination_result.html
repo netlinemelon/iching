@@ -480,4 +480,18 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+// 保存到浏览器本地存储
+if (window.IChingStorage) {
+    (function() {
+        try {
+            var saveData = {{ result | tojson | safe }};
+            IChingStorage.saveResult(saveData);
+        } catch (e) {
+            console.warn('[IChingStorage] 保存到本地失败:', e);
+        }
+    })();
+}
+</script>
 {% endblock %}

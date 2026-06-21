@@ -330,4 +330,18 @@
     <a href="/divine/coin" class="btn btn-primary">再来一卦</a>
   </div>
 </div>
+
+<script>
+// 保存到浏览器本地存储（仅在非分享页面保存，避免分享页重复写入）
+if (window.IChingStorage && typeof shared !== 'undefined' && !shared) {
+    (function() {
+        try {
+            var saveData = {{ record | tojson | safe }};
+            IChingStorage.saveResult(saveData);
+        } catch (e) {
+            console.warn('[IChingStorage] 保存到本地失败:', e);
+        }
+    })();
+}
+</script>
 {% endblock %}

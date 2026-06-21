@@ -823,6 +823,75 @@ blockquote {
   color: var(--color-warning);
 }
 
+/* ===== 移动端触摸优化 ===== */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px !important; /* 防止 iOS 自动缩放 */
+}
+
+.scrollable-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* ===== 数据管理工具 ===== */
+.data-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.data-tools .btn {
+  white-space: nowrap;
+}
+
+#sync-code-input {
+  width: 110px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 16px !important;
+  font-family: var(--font-sans);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  text-align: center;
+  letter-spacing: 4px;
+}
+
+#sync-code-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* ===== 同步结果卡片 ===== */
+.sync-result-card {
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  font-size: var(--font-small);
+  line-height: 1.8;
+}
+
+.sync-result-card strong {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
 /* ===== 响应式 ===== */
 @media (max-width: 1024px) {
   :root {
@@ -895,6 +964,23 @@ blockquote {
 
   .hero-icon {
     font-size: 2.8rem;
+  }
+
+  /* 铜钱动画区域移动端适配 */
+  .coin-group .coin,
+  .coin-group .rounded-full {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 1rem !important;
+  }
+
+  .lines-stack {
+    max-width: 100% !important;
+  }
+
+  .donate-float {
+    bottom: 16px;
+    right: 16px;
   }
 }
 

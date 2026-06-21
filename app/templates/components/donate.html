@@ -1,0 +1,20 @@
+<div x-data="{ open: false }" class="donate-float">
+  <button @click="open = !open" class="donate-btn" title="赞助支持" aria-label="赞助支持">
+    ☕
+  </button>
+  <div x-show="open" @click.outside="open = false" class="donate-card" x-transition.opacit.duration.200ms>
+    <h4>支持开源易经占卜</h4>
+    <p class="text-muted" style="margin-bottom: var(--space-sm);">扫码赞助，帮助服务器运行</p>
+    <div class="qr-grid">
+      <div class="qr-item">
+        <img src="/static/img/wechat-qr.png" alt="微信赞赏" loading="lazy" onerror="this.style.display='none'">
+        <span>微信</span>
+      </div>
+      <div class="qr-item">
+        <img src="/static/img/alipay-qr.png" alt="支付宝" loading="lazy" onerror="this.style.display='none'">
+        <span>支付宝</span>
+      </div>
+    </div>
+    <p class="text-tiny text-muted" style="margin-top: var(--space-sm); margin-bottom: 0;">将收款码图片放入 static/img/ 目录</p>
+  </div>
+</div>

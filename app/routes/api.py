@@ -5,9 +5,10 @@ REST API 路由 — JSON API Routes
 """
 
 import random
+from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Request
 from sqlalchemy import select, func
 
 from app.database import async_session
@@ -449,13 +450,27 @@ async def api_history_share(
 # ─── AI 解卦 ──────────────────────────────────────────────
 
 @router.post("/interpret/{token}")
-async def api_ai_interpret(token: str = Path(..., description="占卜结果令牌")):
+async def api_ai_interpret(
+    request: Request,
+    token: str = Path(..., description="占卜结果令牌"),
+):
     """AI 智能解卦 —— 使用大语言模型对占卜结果进行综合解读。
 
     同一个 token 的解读结果会被缓存（30分钟）。
     """
     import hashlib
     from app.cache import cache_get, cache_set
+    from app.limits import can_use_ai, record_ai_use, get_client_ip
+
+    client_ip = get_client_ip(request)
+
+    # 检查速率限制
+    if not can_use_ai(client_ip):
+        log(802, f"limits: AI limit reached for ip={client_ip[:15]}...")
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "今日 AI 解卦已达日限额", "code": "DAILY_LIMIT_REACHED"},
+        )
 
     # 先从缓存获取占卜结果
     result = await cache_get(token)
@@ -488,6 +503,9 @@ async def api_ai_interpret(token: str = Path(..., description="占卜结果令�
         log(907, "api_ai_interpret: FAILED", level="ERROR", error=e)
         raise HTTPException(status_code=500, detail="AI 解卦服务暂不可用，请稍后重试。")
 
+    # 记录 AI 使用次数
+    record_ai_use(client_ip)
+
     response = {"token": token, "interpretation": text}
 
     # 缓存解读结果（30分钟）
@@ -508,3 +526,84 @@ async def api_ai_interpret(token: str = Path(..., description="占卜结果令�
         log(909, "api_ai_interpret: DB save FAILED", level="WARN", error=e)
 
     return response
+
+
+@router.get("/limits/ai")
+async def api_ai_limits(request: Request):
+    """查询今日 AI 使用情况。"""
+    from app.limits import get_usage, get_client_ip
+    client_ip = get_client_ip(request)
+    return get_usage(client_ip)
+
+
+# ─── 同步码 ──────────────────────────────────────────────
+
+_sync_store: dict[str, dict] = {}
+"""内存同步码存储。
+   key = 6 位数字码, value = {"records": [...], "expires_at": datetime}
+   读取时检查过期，过期条目自动删除。24 小时后过期。
+"""
+
+
+def _clean_expired_sync_codes():
+    """清理过期的同步码。"""
+    now = datetime.utcnow()
+    expired = [k for k, v in _sync_store.items() if v["expires_at"] < now]
+    for k in expired:
+        del _sync_store[k]
+    if expired:
+        log(355, f"sync: cleaned {len(expired)} expired codes")
+
+
+@router.post("/sync/create")
+async def sync_create(request: Request):
+    """上传占卜记录，返回 6 位数字同步码。
+
+    请求体: 包含 records 数组的 JSON 对象（与导出格式兼容）
+    响应: {code: "123456", expires_at: "2026-01-01T00:00:00"}
+    """
+    _clean_expired_sync_codes()
+
+    body = await request.json()
+    records = body.get("records", [])
+    if not isinstance(records, list):
+        raise HTTPException(status_code=400, detail="请求体必须包含 records 数组")
+
+    # 生成 6 位不重复数字码
+    import random as rnd
+    for _ in range(100):
+        code = f"{rnd.randint(100000, 999999)}"
+        if code not in _sync_store:
+            break
+    else:
+        raise HTTPException(status_code=500, detail="无法生成唯一同步码，请重试")
+
+    expires_at = datetime.utcnow() + timedelta(hours=24)
+    _sync_store[code] = {
+        "records": records,
+        "expires_at": expires_at,
+    }
+
+    log(353, f"sync: created code={code} records={len(records)}")
+    return {
+        "code": code,
+        "expires_at": expires_at.isoformat(),
+    }
+
+
+@router.get("/sync/{code}")
+async def sync_download(code: str):
+    """通过 6 位同步码下载占卜记录。"""
+    _clean_expired_sync_codes()
+
+    entry = _sync_store.get(code)
+    if entry is None:
+        log(354, f"sync: code={code} NOT FOUND", level="WARN")
+        raise HTTPException(status_code=404, detail="同步码无效或已过期")
+
+    log(353, f"sync: downloaded code={code} records={len(entry['records'])}")
+    return {
+        "code": code,
+        "records": entry["records"],
+        "expires_at": entry["expires_at"].isoformat(),
+    }

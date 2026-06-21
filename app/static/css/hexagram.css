@@ -506,6 +506,9 @@
   gap: 2px;
   border-bottom: 2px solid var(--color-border-light);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
 }
 
 .tab-btn {
@@ -590,23 +593,55 @@
     padding: var(--space-sm) var(--space-md);
     font-size: var(--font-small);
   }
+
+  /* 历史列表：移动端卡片全宽 */
+  .history-item {
+    flex-wrap: wrap;
+  }
+
+  .history-item .history-link {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-item {
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+  }
+
+  .history-link span:first-child {
+    font-size: 1.5rem !important;
+  }
 }
 
 @media (max-width: 480px) {
   .hexagram-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 3px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
   }
 
   .hex-cell-unicode {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
   }
 
   .hex-cell-name {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .hex-cell-pinyin {
     display: none;
+  }
+
+  .hex-cell-number {
+    font-size: 0.6rem;
+  }
+}
+
+/* 超小屏幕：2列 */
+@media (max-width: 360px) {
+  .hexagram-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
