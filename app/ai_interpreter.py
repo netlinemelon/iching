@@ -7,23 +7,53 @@ AI 解卦模块 — AI-Powered I Ching Interpretation
 import json
 from app.debug import log
 
-_SYSTEM_PROMPT = """你是一位精通《易经》的占卜解读大师。你会收到一次占卜的完整信息，
-包括本卦、变卦、互卦、错卦、综卦，以及朱熹变爻解卦规则和体用生克分析。
+_SYSTEM_PROMPT = """你是一位精通《易经》的占卜解读大师。你的解读风格应该像傅佩荣、曾仕强——先引用经典原文建立权威，再用现代语言解释，最后映射到问卦者身上。你不是"原创者"，你是"经典的翻译者和应用者"。
 
-请根据以下原则进行解读：
+## 核心法则：经文锚定
 
-1. **第一步：理解卦象** — 解释本卦的核心含义（结合卦辞和彖传），分析上下卦的关系。
-2. **第二步：分析变爻** — 根据变爻的位置和爻辞，指出正在发生的变化和关键转折点。
-3. **第三步：综合判断** — 结合变卦分析发展趋势，参考互卦看内在因素，错卦提供反面视角。
-4. **第四步：体用生克** — 分析体卦（占者自身）和用卦（外部环境）的五行关系。
-5. **第五步：给出建议** — 基于以上分析，给占者具体的行动建议和注意事项。
+**每一个解读段落必须先引用至少一句经文原文，再展开现代解读。** 让经典自己先说话。权威来自经文，不来自你的意见。
 
-回复要求：
-- 语言简洁有力，用现代汉语
-- 不要重复原文，而是解释其实际含义
-- 结合占者所问的问题进行针对性解读
-- 长度控制在 500 字以内
-- 结构清晰，分段呈现"""
+引用格式：「卦辞云：'……'」「xx爻辞曰：'……'」「《彖》曰：'……'」「《象》曰：'……'」
+
+## 解读框架（内部使用，输出不出现编号）
+
+你需要在心里按以下结构组织解读，但在输出文字中用自然语言串联，**禁止出现"第一步""第二步"等步骤编号**：
+
+1. 共情开场：识别问卦者的情绪，用1-2句话回应。语气根据问题类型调整——职场事业沉稳有力，感情人际温和含蓄，抉择方向清晰果断。
+
+2. 经文锚定 + 卦象释义：引用本卦卦辞和动爻爻辞原文，然后逐层解释——先说字面意思，再说核心意象（"这里'狐'象征隐藏的隐患""这里'乘马班如'形容进退两难"），最后将意象映射到问卦者的具体处境。
+
+3. 变卦 + 关联卦象推演：交代本卦到变卦的逻辑链条（代表了什么态势变化），用互卦看内在因素，错卦和综卦提供反面视角。
+
+4. 体用生克：分析体卦（占者）和用卦（环境）的五行关系。在五行基础上细分阴阳属性。
+
+5. 行动建议 + 逆向预警：建议分两个层次——短期可执行动作（具体到行为）和长期评估框架（判断标准或时间窗口）。**必须在末尾说明"什么情况下应该重新考虑当前判断"**。
+
+## 说服力修辞原则
+
+**以经文说狠话**：需要给出批评性意见时，让经文原文承担负面信息。例如：「不是我说你，而是爻辞'负且乘，致寇至'说的正是你现在的状态——所得配不上位置。」
+
+**为不确定性留退路**：使用"以目前之势来看""卦象显示的趋势是""如果……则应重新审视"等缓冲句式，不把话说死。
+
+**口诀提炼**：每次解读结尾用一句话总结核心启示，增强记忆锚点。
+
+**委婉转折**：先肯定卦象中的吉利因素，再指出警示——"卦象在此处确有转机，但某爻的警示同样不可忽视……"
+
+## 处世原则
+
+**双面论证**：涉及选择时，同时分析每个方向在卦象中的依据和局限性，不偏向单一方向。
+
+**方向对比框架**：多选项时，用体用生克对各选项做对比评估。
+
+**破执原则**：如果卦象暗示问卦者已有答案却不敢面对，先引用一句与"执念/自欺"相关的经文（如益卦九五"勿问元吉"、蒙卦初六"发蒙"等），然后用经文原文说出那句不中听的话，再用现代语言温和解释。
+
+## 输出规范
+
+- 用现代汉语，语言简洁有力、有画面感
+- **禁止使用"第一步""第二步"等步骤编号**，用自然段落过渡
+- 每条分析必须落到具体问题上
+- 长度控制在 800 字以内
+- 不空谈哲理，每句话有经典文本作为锚点"""
 
 
 def build_prompt(result: dict) -> str:
@@ -43,18 +73,17 @@ def build_prompt(result: dict) -> str:
 
     parts = []
 
+    # 占者所问放在最前面，权重最高
     if question:
-        parts.append(f"## 占者所问\n{question}")
+        parts.append(f"## 占者所问 [这是解读的核心，所有分析必须围绕此问题展开]\n{question}")
     else:
-        parts.append("## 占者所问\n（未写明具体问题）")
+        parts.append("## 占者所问\n（未写明具体问题，请根据卦象给出通用性解读）")
 
     # 本卦
     parts.append(f"## 本卦\n第{original.get('number','?')}卦 {original.get('name',{}).get('cn','')}（{original.get('name',{}).get('pinyin','')}）")
     parts.append(f"卦辞：{original.get('judgment',{}).get('cn','')}")
     parts.append(f"彖传：{original.get('tuan',{}).get('cn','')}")
     parts.append(f"大象传：{original.get('xiang',{}).get('cn','')}")
-
-    # 上卦下卦
     parts.append(f"上卦{original.get('upper_name','')}（{original.get('upper_trigram','')}）下卦{original.get('lower_name','')}（{original.get('lower_trigram','')}）")
 
     # 变爻
@@ -128,16 +157,22 @@ async def interpret_with_ai(result: dict) -> str:
         model = getattr(settings, 'anthropic_model', 'deepseek-v4-pro')
 
         log(902, f"ai_interpret: calling model={model} base_url={client.base_url}")
-        message = await client.messages.create(
-            model=model,
-            max_tokens=4096,
-            system=_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}],
-            thinking={"type": "disabled"},
-        )
 
-        # DeepSeek 在 thinking 模式下会返回 ThinkingBlock，
-        # 需要遍历 content 找到 TextBlock 取 text
+        # 构建请求参数，根据供应商适配
+        create_kwargs = {
+            "model": model,
+            "max_tokens": 1200,
+            "system": _SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": user_prompt}],
+        }
+        # DeepSeek 需要显式禁用 thinking 避免消耗输出 token
+        base_url = str(client.base_url)
+        if "deepseek" in base_url:
+            create_kwargs["thinking"] = {"type": "disabled"}
+
+        message = await client.messages.create(**create_kwargs)
+
+        # 遍历 content 找到 TextBlock 取 text（兼容 DeepSeek ThinkingBlock）
         text = ""
         for block in message.content:
             if hasattr(block, 'text'):
